@@ -28,22 +28,22 @@ gameRoomVariables['tesztszoba'] = {
 const graphPoints = [0,1,2,3];
 const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
 const taxiMatrix = [
-    [true, true, true, false],
+    [true, true, true, true],
     [true, true, true, true],
     [true, true, true, true],
     [true, true, true, true],
   ];
 const metroMatrix = [
-    [false, false, true, false],
-    [false, false, true, true],
-    [true, true, false, false],
-    [false, false, true, false],
+    [true, true, true, true],
+    [true, true, true, true],
+    [true, true, true, true],
+    [true, true, true, true],
   ];
-const busMatrix = [
-    [false, true, true, false],
-    [false, false, true, true],
-    [false, false, false, false],
-    [false, false, true, false],
+const busMatrix = [ //sor:honnan oszlop:hova
+    [true, true, true, true],
+    [true, true, true, true],
+    [true, true, true, true],
+    [true, true, true, true],
   ];
 //-->
 
@@ -141,7 +141,6 @@ function broadcastVisibleState(roundCount, playerData) {
         data : results
     };
     notifyEveryone(JSON.stringify(toSend));
-    //console.log(JSON.stringify(results));
 }
 
 
@@ -154,10 +153,8 @@ function getMyData(playerData, id) {
 } 
 
 function onMessage(client, data) {
-    console.log("roomid:", client.roomId);
     
     let roomId = client.roomId;
-    //let roomId = 'tesztszoba';
     let currentRoomData = gameRoomVariables[roomId];
     let id = client.id;
     try {
@@ -169,12 +166,12 @@ function onMessage(client, data) {
         return;
     }
     if(msg.type == "step") {
+        if(!currentRoomData.MrXClaimed) {
+            console.log(`Player${id} tried to step before the game started.`);
+            client.send(`{"type": "alert", msg: "Game hasn't started because nobody has taken Mr. X role yet."}`);
+            return;
+        }
         if(playerStepped(client, msg, currentRoomData.playerData)) {
-            if(!currentRoomData.MrXClaimed) {
-                console.log(`Player${id} tried to step before the game started.`);
-                client.send(`{"type": "alert", msg: "Game hasn't started because nobody has taken Mr. X role yet."}`);
-                return;
-            }
             client.send("OK");
             currentRoomData.stepCount += 1;
             console.log(currentRoomData.allPlayers)
@@ -217,7 +214,6 @@ function onMessage(client, data) {
         console.log(`Not implemented JSON message : ${msg.toString()}`);
         client.send(`{"type": "alert", "msg" : "Dude wtf"}`);
     }
-    //console.log(`${client.id}: ${msg}`);
 }
 
 function resetStepCount(roomID) {
@@ -228,7 +224,21 @@ function resetStepCount(roomID) {
 }
 
 function isAllowedStep(fromPos, toPos, byVehicle) {
-    return true;
+    switch(byVehicle) {
+        case 'bus':
+            return busMatrix[fromPos][toPos];
+            break;
+        case 'taxi':
+            return taxiMatrix[fromPos][toPos];
+            break;
+        case 'metro':
+            return metroMatrix[fromPos][toPos];
+            break;
+        default:
+            console.log("Unknown type:" + byVehicle);
+            return false;
+    }
+    //return true;
 }
 
 /*
