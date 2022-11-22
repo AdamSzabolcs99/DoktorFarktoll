@@ -41,18 +41,21 @@ playerData[0] = {
     "name": "Szabi",
     "role" : "bobby",
     "position" : 2,
+    "stepped" : 0,
     tickets : {"taxi": 1, "bus": 2, "metro": 3}
 }
 playerData[1] = {
     "name": "Marci",
     "role" : "X",
     "position" : 1,
+    "stepped" : 0,
     tickets : {"taxi": 3, "bus": 5, "metro": 3, "boat": 1}
 }
 playerData[2] = {
     "name": "Hassan",
     "role" : "bobby",
     "position" : 0,
+    "stepped" : 0,
     tickets : {"taxi": 10, "bus" : 21, "metro": 0}
 }
 
@@ -130,6 +133,7 @@ function onMessage(client, data) {
                 else {
                     console.log("Game goes on");
                     notifyEveryone(`{"msg": "NEXT_ROUND"}`);
+                    resetStepCount();
                 }
             }
         }
@@ -143,7 +147,12 @@ function onMessage(client, data) {
     //console.log(`${client.id}: ${msg}`);
 }
 
-
+function resetStepCount() {
+    for (playerId in Object.keys(playerData)) {
+        playerData[playerId].stepped = 0;
+        console.log("Step counts reseted");
+    }
+}
 
 function isAllowedStep(fromPos, toPos, byVehicle) {
     return true;
@@ -155,8 +164,9 @@ stepMessage : {"type": "step", "toPos":3, "byVehicle": "taxi"}
 function playerStepped(client, msg) {
     let id = client.id;
     let player = playerData[id];
-    if(isAllowedStep(player.position, msg.toPos, msg.byVehicle) && player.tickets[msg.byVehicle] > 0) {
+    if(isAllowedStep(player.position, msg.toPos, msg.byVehicle) && player.tickets[msg.byVehicle] > 0 && player.stepped == 0) {
         player.position = msg.toPos;
+        player.stepped = 1;
         player.tickets[msg.byVehicle] = player.tickets[msg.byVehicle] - 1;
         console.log(playerData);
         return true;
