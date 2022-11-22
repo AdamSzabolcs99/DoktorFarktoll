@@ -1,6 +1,6 @@
 var uuid = require('uuid-random');
 const WebSocket = require('ws');
-
+const url = require('url');
 //=====WEBSOCKET FUNCTIONS======
 const serv_port = 8080;
 const wss = new WebSocket.WebSocketServer({port:serv_port}, ()=> {
@@ -10,19 +10,23 @@ const wss = new WebSocket.WebSocketServer({port:serv_port}, ()=> {
 /* 
     Random global variable list
 */
-let allClients = [];
-let stepCount = 0;
-let roundCount = 0;
-let nextuid = 0;
-let playerData = {};
-let endMsg = ""; //"Temporary" solution to easily access the ending message
+gameRoomVariables = {}
 
+gameRoomVariables['tesztszoba'] = {
+    allClients : [],
+    stepCount : 0,
+    roundCount : 0,
+    nextuid : 0,
+    playerData : {},
+    endMsg : "",
+    MrXClaimed : false,
+    allPlayers : 0,
+}
+
+//<!-- MAP DATA, this should be independent from game room as these are constants
+//The adjacency matrixes are not in use at the moment
 const graphPoints = [0,1,2,3];
 const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
-
-
-
-//The adjacency matrixes are not in use at the moment
 const taxiMatrix = [
     [true, true, true, false],
     [true, true, true, true],
@@ -41,11 +45,11 @@ const busMatrix = [
     [false, false, false, false],
     [false, false, true, false],
   ];
-
+//-->
 
 /*Test data points */
-
-playerData[0] = {
+/* Msg to claim Mr. X role: {"type" : "CLAIM_MR_X"} */
+gameRoomVariables['tesztszoba'].playerData[0] = {
     "name": "Szabi",
     "role" : "bobby",
     "position" : 2,
@@ -53,16 +57,16 @@ playerData[0] = {
     tickets : {"taxi": 1, "bus": 2, "metro": 3},
     "color" : "blue"
 }
-playerData[1] = {
+gameRoomVariables['tesztszoba'].playerData[1] = {
     "name": "Marci",
-    "role" : "X",
+    "role" : "bobby",
     "position" : 1,
     "stepped" : 0,
     "double_steps" : 1,
     tickets : {"taxi": 3, "bus": 5, "metro": 3, "boat": 1},
     "color" : "red"
 }
-playerData[2] = {
+gameRoomVariables['tesztszoba'].playerData[2] = {
     "name": "Hassan",
     "role" : "bobby",
     "position" : 0,
@@ -70,15 +74,12 @@ playerData[2] = {
     tickets : {"taxi": 10, "bus" : 21, "metro": 0},
     "color" : "charga"
 }
-
-//let allPlayers = playerData.length;
-let allPlayers = 3;
-
-console.log(typeof(playerData));
+gameRoomVariables['tesztszoba'].allPlayers = 3;
+//console.log(typeof(gameRoomVariables['tesztszoba'].playerData));
 /*
 Returns if the game has ended, if true, also modifies global variable "endMsg" with the ending message
 */
-function endCheck(playerData) {
+function endCheck(playerData, roundCount, roomID) {
     bobbyPositions = [];
     MrXPosition = -1;
     let ticketsNull = true;
@@ -96,15 +97,15 @@ function endCheck(playerData) {
         }
     }
     if(bobbyPositions.includes(MrXPosition)) {
-        endMsg = "Mr. X was caught, game over!";
+        gameRoomVariables[roomID].endMsg = "Mr. X was caught, game over!";
         return true;
     }
     else if(ticketsNull){
-        endMsg = "Bobbies has run out of tickets, game over!";
+        gameRoomVariables[roomID].endMsg = "Bobbies has run out of tickets, game over!";
         return true;
     }
     else if(roundCount>=24) {
-        endMsg = "End of the game, Mr. X wasn't caught!";
+        gameRoomVariables[roomID].endMsg = "End of the game, Mr. X wasn't caught!";
         return true;
     }
     return false;
@@ -126,12 +127,8 @@ function notifyEveryone(msg) {
      });
 }
 
-function broadcastVisibleState(roundCount) {
+function broadcastVisibleState(roundCount, playerData) {
     const sendMrxPosRounds = [3,8,13,18];
-    /*
-    if(sendMrxPosRounds.includes(roundCount)) {
-        notifyEveryone(`{"type": "MRX_POSITION", "msg": "${getMrXPosition(playerData)}"}`);
-    } */
     let results = []
     for (k in Object.keys(playerData)) {
         player = playerData[k];
@@ -147,7 +144,21 @@ function broadcastVisibleState(roundCount) {
     //console.log(JSON.stringify(results));
 }
 
+
+function getMyData(playerData, id) {
+    let msg = {
+        "type" : "OWN_DATA_UPDATE",
+        data: playerData[id]
+    }
+    return JSON.stringify(msg);
+} 
+
 function onMessage(client, data) {
+    console.log("roomid:", client.roomId);
+    
+    let roomId = client.roomId;
+    //let roomId = 'tesztszoba';
+    let currentRoomData = gameRoomVariables[roomId];
     let id = client.id;
     try {
         var msg = JSON.parse(data);
@@ -158,23 +169,28 @@ function onMessage(client, data) {
         return;
     }
     if(msg.type == "step") {
-        if(playerStepped(client, msg)) {
+        if(playerStepped(client, msg, currentRoomData.playerData)) {
+            if(!currentRoomData.MrXClaimed) {
+                console.log(`Player${id} tried to step before the game started.`);
+                client.send(`{"type": "alert", msg: "Game hasn't started because nobody has taken Mr. X role yet."}`);
+                return;
+            }
             client.send("OK");
-            stepCount += 1;
-            console.log(allPlayers)
-            if(stepCount>=allPlayers) {
+            currentRoomData.stepCount += 1;
+            console.log(currentRoomData.allPlayers)
+            if(currentRoomData.stepCount>=currentRoomData.allPlayers) {
                 client.send("End of round");
-                stepCount = 0;
-                roundCount = roundCount + 1;
-                if(endCheck(playerData)) {
+                currentRoomData.stepCount = 0;
+                currentRoomData.roundCount = currentRoomData.roundCount + 1;
+                if(endCheck(currentRoomData.playerData, currentRoomData.roundCount, roomId)) {
                     console.log("Game finished");
-                    notifyEveryone(`{"type": "GAME_ENDED", "msg": "${endMsg}"}`);
+                    notifyEveryone(`{"type": "GAME_ENDED", "msg": "${currentRoomData.endMsg}"}`);
                 }
                 else {
                     console.log("Game goes on");
                     notifyEveryone(`{"type": "NEXT_ROUND"}`); //New visible game data should be also sent
-                    broadcastVisibleState(roundCount);
-                    resetStepCount();
+                    broadcastVisibleState(currentRoomData.roundCount, currentRoomData.playerData);
+                    resetStepCount(roomId);
                 }
             }
         }
@@ -182,16 +198,31 @@ function onMessage(client, data) {
             client.send("Not accepted");
         }
     }
+    else if(msg.type == "CLAIM_MR_X") {
+        if(!currentRoomData.MrXClaimed) {
+            currentRoomData.playerData[id].role = "X";
+            client.send(`{"type": "YOU_ARE_MR_X"`);
+            notifyEveryone(`{"type": "GAME_START"}`);
+            broadcastVisibleState(3, currentRoomData.playerData);
+            currentRoomData.MrXClaimed = true;
+        }
+        else {
+            client.send(`{"type": "alert", "msg": "Mr X. already taken."}`);
+        }
+    }
+    else if(msg.type == "GET_OWN_DATA") {
+        client.send(getMyData(currentRoomData.playerData, id));
+    }
     else {
         console.log(`Not implemented JSON message : ${msg.toString()}`);
-        client.send("Dude wtf");
+        client.send(`{"type": "alert", "msg" : "Dude wtf"}`);
     }
     //console.log(`${client.id}: ${msg}`);
 }
 
-function resetStepCount() {
-    for (playerId in Object.keys(playerData)) {
-        playerData[playerId].stepped = 0;
+function resetStepCount(roomID) {
+    for (playerId in Object.keys(gameRoomVariables[roomID].playerData)) {
+        gameRoomVariables[roomID].playerData[playerId].stepped = 0;
         console.log("Step counts reset");
     }
 }
@@ -203,7 +234,7 @@ function isAllowedStep(fromPos, toPos, byVehicle) {
 /*
 stepMessage : {"type": "step", "toPos":3, "byVehicle": "taxi"}
 */
-function playerStepped(client, msg) {
+function playerStepped(client, msg, playerData) {
     let id = client.id;
     let player = playerData[id];
     if(isAllowedStep(player.position, msg.toPos, msg.byVehicle) && player.tickets[msg.byVehicle] > 0 && player.stepped == 0) {
@@ -220,15 +251,29 @@ function playerStepped(client, msg) {
 
 //Websocket function that manages connection with clients
 wss.on('connection', function connection(client, req) {
-    console.log(`URL: ${req.url}`);  //That could be a way to send game room id in connection time
-    allClients.push(client);
+    //console.log(`URL: ${req.url}`);  //That could be a way to send game room id in connection time
+    let roomId;
+    try {
+        const queryObject = url.parse(req.url, true).query;
+        if(queryObject['roomid']===undefined) {
+            throw 'Missing room id';
+        }
+        roomId = queryObject['roomid'];
+    }
+    catch {
+        client.send("Missing room ID!");
+        client.close();
+    }
+    roomId = 'tesztszoba'; //shpuld be deleted in the future
+    let currentRoomData = gameRoomVariables[roomId];
     //Create Unique User ID for player
     //client.id = uuid();
-    client.id = nextuid;
-    nextuid = nextuid + 1;
+    client.id = currentRoomData.nextuid;
+    currentRoomData.nextuid = currentRoomData.nextuid + 1;
+    client.roomId = roomId;
     console.log(`Client ${client.id} connected!`)
 
-    client.send(`{"id": "${client.id}"}`)
+    client.send(`{"type": "log", "msg": "Your id: ${client.id}"}`)
     client.on('message', (data) => {
         onMessage(client, data);
     })
