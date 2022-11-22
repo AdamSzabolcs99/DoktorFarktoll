@@ -1,1 +1,1 @@
-Szoftver architektúrák 2022/23/1
+Szoftverarchitektúrák 2022/23/1
