@@ -6,13 +6,22 @@ const serv_port = 8080;
 const wss = new WebSocket.WebSocketServer({port:serv_port}, ()=> {
     console.log('Server started')
 })
-let playerData = {};
 
+/* 
+    Random global variable list
+*/
+let allClients = [];
+let stepCount = 0;
+let roundCount = 0;
+let nextuid = 0;
+let playerData = {};
+let endMsg = ""; //"Temporary" solution to easily access the ending message
 
 const graphPoints = [0,1,2,3];
-const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point
+const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
 
-let endMsg = "";
+
+
 //The adjacency matrixes are not in use at the moment
 const taxiMatrix = [
     [true, true, true, false],
@@ -36,29 +45,36 @@ const busMatrix = [
 
 /*Test data points */
 
-let allPlayers = 3;
 playerData[0] = {
     "name": "Szabi",
     "role" : "bobby",
     "position" : 2,
     "stepped" : 0,
-    tickets : {"taxi": 1, "bus": 2, "metro": 3}
+    tickets : {"taxi": 1, "bus": 2, "metro": 3},
+    "color" : "blue"
 }
 playerData[1] = {
     "name": "Marci",
     "role" : "X",
     "position" : 1,
     "stepped" : 0,
-    tickets : {"taxi": 3, "bus": 5, "metro": 3, "boat": 1}
+    "double_steps" : 1,
+    tickets : {"taxi": 3, "bus": 5, "metro": 3, "boat": 1},
+    "color" : "red"
 }
 playerData[2] = {
     "name": "Hassan",
     "role" : "bobby",
     "position" : 0,
     "stepped" : 0,
-    tickets : {"taxi": 10, "bus" : 21, "metro": 0}
+    tickets : {"taxi": 10, "bus" : 21, "metro": 0},
+    "color" : "charga"
 }
 
+//let allPlayers = playerData.length;
+let allPlayers = 3;
+
+console.log(typeof(playerData));
 /*
 Returns if the game has ended, if true, also modifies global variable "endMsg" with the ending message
 */
@@ -69,13 +85,13 @@ function endCheck(playerData) {
     for (playerId in Object.keys(playerData)) {
         player = playerData[playerId];
         tickets = player.tickets;
-        if(player.role=="bobby") {
+        if(player.role==="bobby") {
             bobbyPositions.push(player.position);
             if(tickets.taxi > 0 || tickets.bus > 0 || tickets.metro > 0) {
                 ticketsNull = false;
             }
         }
-        else if(player.role=="X") {
+        else if(player.role==="X") {
             MrXPosition = player.position;
         }
     }
@@ -84,7 +100,7 @@ function endCheck(playerData) {
         return true;
     }
     else if(ticketsNull){
-        endMsg = "Bobbies has run of tickets, game over!";
+        endMsg = "Bobbies has run out of tickets, game over!";
         return true;
     }
     else if(roundCount>=24) {
@@ -94,18 +110,41 @@ function endCheck(playerData) {
     return false;
 }
 
+function getMrXPosition(playerData) {
+    for(k in Object.keys(playerData)) {
+        if(playerData[k].role==="X") {
+            return playerData[k].position;
+        } 
+    }
+    return undefined;
+}
 
-
-let allClients = [];
-let stepCount = 0;
-let roundCount = 0;
-
-let nextuid = 0;
 
 function notifyEveryone(msg) {
     wss.clients.forEach(function(client) {
         client.send(msg.toString());
      });
+}
+
+function broadcastVisibleState(roundCount) {
+    const sendMrxPosRounds = [3,8,13,18];
+    /*
+    if(sendMrxPosRounds.includes(roundCount)) {
+        notifyEveryone(`{"type": "MRX_POSITION", "msg": "${getMrXPosition(playerData)}"}`);
+    } */
+    let results = []
+    for (k in Object.keys(playerData)) {
+        player = playerData[k];
+        if(player.role === "bobby" || sendMrxPosRounds.includes(roundCount)) {
+            results.push(player);
+        }
+    }
+    let toSend = {
+        "type" : "STATE_UPDATE",
+        data : results
+    };
+    notifyEveryone(JSON.stringify(toSend));
+    //console.log(JSON.stringify(results));
 }
 
 function onMessage(client, data) {
@@ -122,17 +161,19 @@ function onMessage(client, data) {
         if(playerStepped(client, msg)) {
             client.send("OK");
             stepCount += 1;
+            console.log(allPlayers)
             if(stepCount>=allPlayers) {
                 client.send("End of round");
                 stepCount = 0;
                 roundCount = roundCount + 1;
                 if(endCheck(playerData)) {
                     console.log("Game finished");
-                    notifyEveryone(`{"type": "end", "msg": "${endMsg}"}`);
+                    notifyEveryone(`{"type": "GAME_ENDED", "msg": "${endMsg}"}`);
                 }
                 else {
                     console.log("Game goes on");
-                    notifyEveryone(`{"msg": "NEXT_ROUND"}`);
+                    notifyEveryone(`{"type": "NEXT_ROUND"}`); //New visible game data should be also sent
+                    broadcastVisibleState(roundCount);
                     resetStepCount();
                 }
             }
@@ -142,7 +183,8 @@ function onMessage(client, data) {
         }
     }
     else {
-        console.log(msg.toString());
+        console.log(`Not implemented JSON message : ${msg.toString()}`);
+        client.send("Dude wtf");
     }
     //console.log(`${client.id}: ${msg}`);
 }
@@ -150,7 +192,7 @@ function onMessage(client, data) {
 function resetStepCount() {
     for (playerId in Object.keys(playerData)) {
         playerData[playerId].stepped = 0;
-        console.log("Step counts reseted");
+        console.log("Step counts reset");
     }
 }
 
@@ -176,30 +218,27 @@ function playerStepped(client, msg) {
     }
 }
 
-//Websocket function that managages connection with clients
-wss.on('connection', function connection(client){
+//Websocket function that manages connection with clients
+wss.on('connection', function connection(client, req) {
+    console.log(`URL: ${req.url}`);  //That could be a way to send game room id in connection time
     allClients.push(client);
     //Create Unique User ID for player
     //client.id = uuid();
     client.id = nextuid;
     nextuid = nextuid + 1;
-    console.log(`Client ${client.id} Connected!`)
+    console.log(`Client ${client.id} connected!`)
 
-    //Send default client data back to client for reference
     client.send(`{"id": "${client.id}"}`)
-    //Method retrieves message from client
     client.on('message', (data) => {
         onMessage(client, data);
     })
-    
-    //Method notifies when client disconnects
+
     client.on('close', () => {
         console.log(`${client.id} has closed the connection!`);
     })
-
-})
+});
 
 wss.on('listening', () => {
     console.log(`listening on ${serv_port}`);
-})
+});
 
