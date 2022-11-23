@@ -1,0 +1,597 @@
+<html>  
+    <div style="float:right; color:white">
+        Eszköz választása:
+        <button onclick="selectBus()">
+            Busz
+        </button>
+        <button onclick="selectTaxi()">
+            Taxi
+        </button>
+        <button onclick="selectMetro()">
+            Metró
+        </button>
+    </div>
+    <span style="color: white;">Kiválasztott eszköz: </span>
+    <span id="selected" style="color:white"></span>
+    <div style="text-align: center; font-family: Raleway, sans-serif; font-size: xx-large; color:white"> Scotland Yard </div>
+    <div class="wrapper">
+        
+        <div style="width:1512px"><canvas style="margin-left: 100px; margin-top: 50;" id="myCanvas" width="1512" height="779">
+        </canvas></div>
+        
+        <div style="margin-top:50px; margin-left:0px;color: white;">Jegyek
+            <table class="tg" style="margin-top:10px">
+            <thead>
+              <tr>
+                
+                <th class="tg-7btt" style="color: white;">Busz</th>
+                <th class="tg-7btt" style="color: white;">Metró</th>
+                <th class="tg-7btt" style="color: white;">Taxi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+               
+                <td class="tg-c3ow" style="color: white;">8</td>
+                <td class="tg-c3ow" style="color: white;">4</td>
+                <td class="tg-c3ow" style="color: white;">10  </td>
+              </tr>
+            </tbody>
+            </table>
+            <br /><br />
+<div style="margin-top:20px; color: white;">Utazási napló
+    <table class="tg" style="margin-top:30px">
+    <thead>
+      <tr>
+        
+        <th class="tg-7btt">Kör</th>
+        <th class="tg-7btt">Utazási mód</th>
+
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+        
+            <th class="tg-7btt">1</th>
+            <th class="tg-7btt"></th>
+    
+          </tr>
+
+      <tr>
+       
+        <td class="tg-c3ow">2</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">3</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">4</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">5</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">6</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">7</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">8</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">9</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">10</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">11</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">12</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">13</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">14</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">15</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">16</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">17</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">18</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">19</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">20</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">21</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">22</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">23</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">24</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+      <tr>
+       
+        <td class="tg-c3ow">25</td>
+        <td class="tg-c3ow"></td>
+      </tr>
+    </tbody>
+    </table></div>
+</div>
+
+</div>
+<style>
+    html{
+        background-image: linear-gradient(to right, #00b4db, #0083b0);
+        
+        }
+</style>
+
+
+
+    <style type="text/css">
+        .tg  {border-collapse:collapse;border-spacing:0; color:white; background-color: #665a5a;}
+        .tg td{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:10px; color:white;
+          overflow:hidden;padding:5px 5px;word-break:normal;}
+        .tg th{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:10px;
+          font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+        .tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
+        .tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+        </style>
+
+
+    <img id="img1" style="display: none;" onclick="window.open(this.src)">
+    <img id="img2"style="display: none;">
+    <img id="img3"style="display: none;">
+    <img id="img4"style="display: none;">
+    <img id="img5"style="display: none;">
+    <img id="img6"style="display: none;">
+    <img id="img7"style="display: none;">
+    <img id="img8"style="display: none;">
+    <img id="img9"style="display: none;">
+    <img id="img10"style="display: none;">
+
+    <img id="player1" style="display: none;">
+    <img id="player2" style="display: none;">
+    <img id="player3" style="display: none;">
+    <img id="player4" style="display: none;">
+    <img id="player5" style="display: none;">
+    <img id="player6" style="display: none;">
+
+    <script src="jquery-3.6.0.min.js"></script>
+    <style>
+        .wrapper {
+      display: flex;
+    }
+    
+    .wrapper > div {
+      flex: 1;
+    }
+        </style>
+<script>
+
+
+var Acanvas = document.createElement('canvas');
+var playerCtx = Acanvas.getContext('2d');
+
+function selectBus(){
+    selectedMode = "bus"
+    document.getElementById("selected").textContent="Busz"
+
+}
+function selectTaxi(){
+    selectedMode = "taxi"
+    document.getElementById("selected").textContent="Taxi"
+}
+function selectMetro(){
+   selectedMode = "metro"
+   document.getElementById("selected").textContent="Metró"
+
+}
+
+var selectedMode = "none"
+
+
+
+
+
+var player = 0
+const marginOffset= 100
+
+const taxiMatrix = [
+[false, true, true, false, false, true, false, true, false, true],
+[true, true, true, false, false, true, false, true, false, true],
+[false, true, false, false, false, true, false, true, false, true],
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[true, true, true, false, false, false, false, true, false, true],
+[false, false, false, false, false, false, false, false, false, false],
+[true, true, true, false, false, true, false, false, false, true],
+[false, false, false, false, false, false, false, false, false, false],
+[true, true, true, false, false, true, false, true, false, false]
+
+]
+
+
+const metroMatrix = [
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, true, false, true, false, true, true, false, false],
+[false, true, false, false, true, false, true, true, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, true, true, false, false, false, true, true, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, true, true, false, true, false, false, true, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, false, false, false, false, false, false, false, false]
+]
+
+
+const busMatrix = [
+[false, false, true, true, false, true, true, true, true, false],
+[false, false, false, false, false, false, false, false, false, false],
+[true, false, false, true, false, true, true, true, true, false],
+[true, false, true, false, false, true, true, true, true, false],
+[false, true, true, false, false, false, true, true, false, false],
+[true, false, true, true, false, false, true, true, true, false],
+[true, false, true, true, false, false, false, true, true, false],
+[true, false, true, true, false, false, true, false, true, false],
+[true, false, true, true, false, false, true, true, false, false],  
+[false, false, false, false, false, false, false, false, false, false]
+]
+
+
+const graphPoints = [0,1,2,3,4,5,6,7,8,9]
+
+
+var graphPointPositions = [
+[971,570], //*
+[503,333], //*
+[796,283], //*
+[420,816], //*
+[625,108], //*
+[576,556], //*
+[1056,929], //*
+[1194,800],
+[1272,279],
+[1437,508]
+]
+
+for (let i=0; i<graphPointPositions.length; i++){
+    graphPointPositions[i][0] = Math.round(graphPointPositions[i][0]*0.79570990806)
+    graphPointPositions[i][1] = Math.round(graphPointPositions[i][1]*0.79570990806)
+}
+
+var graphPointLengths = []
+
+var playerPositions =[]
+
+playerPositions.push(graphPoints[0])
+playerPositions.push(graphPoints[1])
+playerPositions.push(graphPoints[2])
+
+const graphImages = [
+"blaha.png", //*
+"szabadsag.png", //*
+"oktogon.png", //*
+"rudas.png", //*
+"nyugati.png", //*
+"deak.png", //*
+"corvin.png", //*
+"pillango.png",
+"nagyvarad.png",
+"arena.png"
+]   
+
+
+const playerImages = [
+"bobby.png", //*
+"rendor.png", //*
+"mrx.png"
+]   
+
+var canvas = document.getElementById("myCanvas");
+    var tmpCtx = canvas.getContext("2d");
+
+const radius = 30
+
+var background = new Image();
+background.src = "pest3.png";
+background.id="background"
+background.style="display:none"
+document.body.appendChild(background);
+
+background.onload = function(){
+    tmpCtx.drawImage(background,0,0);   
+    drawMap()
+};
+
+
+function drawLines(radius){
+var taxiPlaces = []
+var metroPlaces = []
+var busPlaces = []
+for (let i=0; i<10;i++){
+    for (let j=0; j<10;j++){
+        if(taxiMatrix[i][j] == true){
+            tmpCtx.strokeStyle = "yellow";
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(graphPointPositions[i][0], graphPointPositions[i][1]);
+            
+            tmpCtx.lineTo(graphPointPositions[j][0], graphPointPositions[j][1]);
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+            tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+3, 0, Math.PI * 2, true);
+            //tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+3, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+          
+            if (!taxiPlaces.includes(i)) {
+                taxiPlaces.push(i);
+            }
+            if (!taxiPlaces.includes(j)) {
+                taxiPlaces.push(j);
+            }
+
+        }        
+}
+}
+
+
+for (let i=0; i<10;i++){
+    for (let j=0; j<10;j++){
+        if(metroMatrix[i][j] == true){
+            tmpCtx.strokeStyle = "red";
+            var offset = 3
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(graphPointPositions[i][0], graphPointPositions[i][1]);
+            
+            tmpCtx.lineTo(graphPointPositions[j][0], graphPointPositions[j][1]);
+            
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+            if (taxiPlaces.includes(i)){
+                offset += 3
+            }
+            tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+            //tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+
+            if (!metroPlaces.includes(i)) {
+                metroPlaces.push(i);
+            }
+            if (!metroPlaces.includes(j)) {
+                metroPlaces.push(j);
+            }
+        }        
+}
+}
+
+
+for (let i=0; i<10;i++){
+    for (let j=0; j<10;j++){
+        if(busMatrix[i][j] == true){
+            tmpCtx.strokeStyle = "blue";
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(graphPointPositions[i][0], graphPointPositions[i][1]);
+            
+            tmpCtx.lineTo(graphPointPositions[j][0], graphPointPositions[j][1]);
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+
+
+
+            var offset = 3 
+            if (taxiPlaces.includes(j)){
+                offset += 3
+            }
+            if (metroPlaces.includes(j)){
+                offset += 3
+            }
+            tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+
+//          tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+
+            if (!busPlaces.includes(i)) {
+                busPlaces.push(i);
+            }
+            if (!busPlaces.includes(j)) {
+                busPlaces.push(j);
+            }
+        }    
+        }        
+}
+}
+
+
+
+
+
+
+
+
+
+function drawPoint(arr,radius,index){
+    var node = "img"
+    var str = node + index   
+
+    var thumbImg = document.getElementById(str)
+    thumbImg.src = graphImages[index-1];
+
+    if(playerPositions.includes(graphPoints[index-1])){
+        node="player"
+        var thumbImg = document.getElementById(str)
+    
+    thumbImg.src = playerImages[index-1];
+    }
+  
+
+    
+    thumbImg.onload = function() {
+        tmpCtx.save();
+        tmpCtx.beginPath();
+       
+        tmpCtx.arc(arr[index-1][0],arr[index-1][1], radius, 0, Math.PI * 2, true);
+        tmpCtx.closePath();
+        tmpCtx.clip();
+        tmpCtx.drawImage(thumbImg, arr[index-1][0]-radius,arr[index-1][1]-radius, radius*2, radius*2);
+        
+        tmpCtx.beginPath();
+        tmpCtx.arc(0,0, radius, 0, Math.PI * 2, true);
+        tmpCtx.clip();
+        tmpCtx.closePath();
+        tmpCtx.restore();
+
+    };
+
+    var tmpCtx = canvas.getContext("2d");
+
+
+  
+}
+   
+
+function drawPlayer(arr,radius,index){
+    playerCtx = tmpCtx
+    var str = "player" + index        
+    var thumbImg = document.getElementById(str)
+    
+    thumbImg.src = playerImages[index-1];
+    
+    thumbImg.onload = function() {
+        playerCtx.save();
+        playerCtx.beginPath();
+       
+        playerCtx.arc(arr[index-1][0],arr[index-1][1], radius, 0, Math.PI * 2, true);
+        playerCtx.closePath();
+        playerCtx.clip();
+        playerCtx.drawImage(thumbImg, arr[index-1][0]-radius,arr[index-1][1]-radius, radius*2, radius*2);
+        
+        playerCtx.beginPath();
+        playerCtx.arc(0,0, radius, 0, Math.PI * 2, true);
+        playerCtx.clip();
+        playerCtx.closePath();
+        playerCtx.restore();
+
+    };
+  }
+canvas.addEventListener('click', function(event) {var ind = -1
+
+var x;
+var y;
+if (event.pageX || event.pageY) { 
+  x = event.pageX;
+  y = event.pageY;
+}
+else { 
+  x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+  y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+} 
+x -= canvas.offsetLeft;
+y -= canvas.offsetTop;
+
+for(let i=0;i<graphPointPositions.length;i++){
+
+    if(x<graphPointPositions[i][0]+radius &&x>graphPointPositions[i][0]-radius){
+    
+        if(y<graphPointPositions[i][1]+radius &&y>graphPointPositions[i][1]-radius){
+           
+            ind = i
+    }
+    else{
+        ind = -1
+    }
+}
+
+} 
+alert(graphImages[ind])
+
+
+}, false);
+
+
+
+var domContext = canvas.getContext('2d');
+domContext.drawImage(Acanvas, 0, 0, 1512, 779);
+
+
+function drawMap(){
+for (let i=1; i<graphPointPositions.length+1;i++){
+        drawPoint(graphPointPositions,30,i)
+}
+drawLines(radius);
+
+}
+
+//ezt kell periodikusan hivni, ami kirajzolja a mapot
+drawMap()
+
+</script>
+
+
+</html>
