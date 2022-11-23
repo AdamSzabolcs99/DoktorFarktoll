@@ -12,21 +12,10 @@ const wss = new WebSocket.WebSocketServer({port:serv_port}, ()=> {
 */
 gameRoomVariables = {}
 
-gameRoomVariables['tesztszoba'] = {
-    allClients : [],
-    stepCount : 0,
-    roundCount : 0,
-    nextuid : 0,
-    playerData : {},
-    endMsg : "",
-    MrXClaimed : false,
-    allPlayers : 0,
-}
-
 //<!-- MAP DATA, this should be independent from game room as these are constants
 //The adjacency matrixes are not in use at the moment
 const graphPoints = [0,1,2,3];
-const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
+//const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
 const taxiMatrix = [
     [true, true, true, true],
     [true, true, true, true],
@@ -47,39 +36,13 @@ const busMatrix = [ //sor:honnan oszlop:hova
   ];
 //-->
 
-/*Test data points */
 /* Msg to claim Mr. X role: {"type" : "CLAIM_MR_X"} */
-gameRoomVariables['tesztszoba'].playerData[0] = {
-    "name": "Szabi",
-    "role" : "bobby",
-    "position" : 2,
-    "stepped" : 0,
-    tickets : {"taxi": 1, "bus": 2, "metro": 3},
-    "color" : "blue"
-}
-gameRoomVariables['tesztszoba'].playerData[1] = {
-    "name": "Marci",
-    "role" : "bobby",
-    "position" : 1,
-    "stepped" : 0,
-    "double_steps" : 1,
-    tickets : {"taxi": 3, "bus": 5, "metro": 3, "boat": 1},
-    "color" : "red"
-}
-gameRoomVariables['tesztszoba'].playerData[2] = {
-    "name": "Hassan",
-    "role" : "bobby",
-    "position" : 0,
-    "stepped" : 0,
-    tickets : {"taxi": 10, "bus" : 21, "metro": 0},
-    "color" : "charga"
-}
-gameRoomVariables['tesztszoba'].allPlayers = 3;
-//console.log(typeof(gameRoomVariables['tesztszoba'].playerData));
+/* stepMessage : {"type": "step", "toPos":3, "byVehicle": "taxi"} */
+
 /*
 Returns if the game has ended, if true, also modifies global variable "endMsg" with the ending message
 */
-function endCheck(playerData, roundCount, roomID) {
+function endCheck(playerData, roundCount, roomID, roundEnded=false) {
     bobbyPositions = [];
     MrXPosition = -1;
     let ticketsNull = true;
@@ -97,14 +60,17 @@ function endCheck(playerData, roundCount, roomID) {
         }
     }
     if(bobbyPositions.includes(MrXPosition)) {
+        gameRoomVariables[roomID].gameEnded = true;
         gameRoomVariables[roomID].endMsg = "Mr. X was caught, game over!";
         return true;
     }
-    else if(ticketsNull){
+    else if(ticketsNull) {
+        gameRoomVariables[roomID].gameEnded = true;
         gameRoomVariables[roomID].endMsg = "Bobbies has run out of tickets, game over!";
         return true;
     }
-    else if(roundCount>=24) {
+    else if(roundCount>=24 && roundEnded) {
+        gameRoomVariables[roomID].gameEnded = true;
         gameRoomVariables[roomID].endMsg = "End of the game, Mr. X wasn't caught!";
         return true;
     }
@@ -138,7 +104,7 @@ function broadcastVisibleState(roundCount, playerData) {
     }
     let toSend = {
         "type" : "STATE_UPDATE",
-        data : results
+        data : results //Ticket data sent only for debugging reasons, should be stripped to avoid cheating
     };
     notifyEveryone(JSON.stringify(toSend));
 }
@@ -165,6 +131,10 @@ function onMessage(client, data) {
         client.send("Invalid data");
         return;
     }
+    if(currentRoomData.gameEnded) {
+        client.send(`{"type": "GAME_ENDED", "msg": "Game already ended. End message: ${currentRoomData.endMsg}"}`);
+        return;
+    }
     if(msg.type == "step") {
         if(!currentRoomData.MrXClaimed) {
             console.log(`Player${id} tried to step before the game started.`);
@@ -172,14 +142,14 @@ function onMessage(client, data) {
             return;
         }
         if(playerStepped(client, msg, currentRoomData.playerData)) {
-            client.send("OK");
+            client.send(`{"type":"STEP_ACCEPTED"}`);
             currentRoomData.stepCount += 1;
-            console.log(currentRoomData.allPlayers)
+            console.log(`Current state:\n${JSON.stringify(currentRoomData.playerData)}`);
             if(currentRoomData.stepCount>=currentRoomData.allPlayers) {
-                client.send("End of round");
+                client.send(`{"type":"ROUND_ENDED"}`);
                 currentRoomData.stepCount = 0;
                 currentRoomData.roundCount = currentRoomData.roundCount + 1;
-                if(endCheck(currentRoomData.playerData, currentRoomData.roundCount, roomId)) {
+                if(endCheck(currentRoomData.playerData, currentRoomData.roundCount, roomId, true)) {
                     console.log("Game finished");
                     notifyEveryone(`{"type": "GAME_ENDED", "msg": "${currentRoomData.endMsg}"}`);
                 }
@@ -190,14 +160,21 @@ function onMessage(client, data) {
                     resetStepCount(roomId);
                 }
             }
+            else if(endCheck(currentRoomData.playerData, currentRoomData.roundCount, roomId, false)) {
+                console.log("Game finished mid round");
+                notifyEveryone(`{"type": "GAME_ENDED", "msg": "${currentRoomData.endMsg}"}`);
+            }
         }
         else {
-            client.send("Not accepted");
+            client.send(`{"type":"STEP_NOT_ACCEPTED", "msg": "You can't do that now."}`);
         }
     }
     else if(msg.type == "CLAIM_MR_X") {
         if(!currentRoomData.MrXClaimed) {
-            currentRoomData.playerData[id].role = "X";
+            let player = currentRoomData.playerData[id];
+            player.role = "X";
+            player.tickets = {"taxi": 3, "bus": 3, "metro": 2, "joker": 2, "double": 2},
+            player.color = 'white';
             client.send(`{"type": "YOU_ARE_MR_X"`);
             notifyEveryone(`{"type": "GAME_START"}`);
             broadcastVisibleState(3, currentRoomData.playerData);
@@ -219,7 +196,6 @@ function onMessage(client, data) {
 function resetStepCount(roomID) {
     for (playerId in Object.keys(gameRoomVariables[roomID].playerData)) {
         gameRoomVariables[roomID].playerData[playerId].stepped = 0;
-        console.log("Step counts reset");
     }
 }
 
@@ -251,13 +227,33 @@ function playerStepped(client, msg, playerData) {
         player.position = msg.toPos;
         player.stepped = 1;
         player.tickets[msg.byVehicle] = player.tickets[msg.byVehicle] - 1;
-        console.log(playerData);
         return true;
     }
     else {
         return false;
     }
 }
+
+function getUnusedColor(roomId) {
+    let currentRoomData = gameRoomVariables[roomId];
+    const colorNum = currentRoomData.freeColors.length;
+    const randomIndex = Math.floor(Math.random() * colorNum);
+    let color = currentRoomData.freeColors[randomIndex];
+    currentRoomData.freeColors = currentRoomData.freeColors.filter(c => c !== color);
+    return color;
+}
+
+function getRandomEmptyPos(roomId) {
+    let currentRoomData = gameRoomVariables[roomId];
+    const posNum = currentRoomData.startingPositions.length;
+    const randomIndex = Math.floor(Math.random() * posNum);
+    let pos = currentRoomData.startingPositions[randomIndex];
+    currentRoomData.startingPositions = currentRoomData.startingPositions.filter(p => p !== pos);
+    //console.log(pos+"\n"+currentRoomData.startingPositions+"\n"+graphPoints);
+    return pos;
+}
+
+
 
 //Websocket function that manages connection with clients
 wss.on('connection', function connection(client, req) {
@@ -274,15 +270,39 @@ wss.on('connection', function connection(client, req) {
         client.send("Missing room ID!");
         client.close();
     }
-    roomId = 'tesztszoba'; //shpuld be deleted in the future
+    //roomId = 'tesztszoba'; //should be deleted in the future
+    if(gameRoomVariables[roomId]===undefined) {
+        console.log(`Room ${roomId} inited.`);
+        gameRoomVariables[roomId] = {
+            allClients : [],
+            stepCount : 0,
+            roundCount : 0,
+            nextuid : 0,
+            playerData : {},
+            gameEnded : false,
+            endMsg : "",
+            MrXClaimed : false,
+            allPlayers : 0,
+            freeColors : ['blue', 'red', 'yellow', 'green', 'purple', 'orange', 'black'],
+            startingPositions : graphPoints,
+        }
+    }
     let currentRoomData = gameRoomVariables[roomId];
-    //Create Unique User ID for player
     //client.id = uuid();
     client.id = currentRoomData.nextuid;
     currentRoomData.nextuid = currentRoomData.nextuid + 1;
     client.roomId = roomId;
+    currentRoomData.playerData[client.id] = {
+        "id" : client.id, //for debugging, not used in game logic, going to be removed
+        "color" : getUnusedColor(roomId),
+        "role" : "bobby",
+        "position" : getRandomEmptyPos(roomId),
+        "stepped" : 0,
+        tickets : {"taxi": 9, "bus": 9, "metro": 6},
+    }
+    currentRoomData.allPlayers = currentRoomData.allPlayers+1;
     console.log(`Client ${client.id} connected!`)
-
+    console.log(currentRoomData.playerData);
     client.send(`{"type": "log", "msg": "Your id: ${client.id}"}`)
     client.on('message', (data) => {
         onMessage(client, data);
@@ -290,6 +310,7 @@ wss.on('connection', function connection(client, req) {
 
     client.on('close', () => {
         console.log(`${client.id} has closed the connection!`);
+        //currentRoomData.playerData = currentRoomData.playerData.filter(p => p.id!==client.id);
     })
 });
 

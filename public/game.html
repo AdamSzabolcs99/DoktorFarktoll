@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <!--CSS/JS imports-->
+    <title>Scotland Yard</title>
+    <script type="text/javascript">
+        var socket = undefined;
+        function onPageLoad() {
+            document.getElementById("messageBox").value = "";
+        }
+        function connectWs() {
+            socket = new WebSocket('ws://localhost:8080/?roomid='+document.getElementById("roomIdInput").value);
+            socket.addEventListener('open', (event) => {console.log("Connected.")});
+            socket.addEventListener('message', (event) => { //You can parse messages and control the game here.
+                document.getElementById("messageBox").value = event.data + '\n' + document.getElementById("messageBox").value;
+            });
+            socket.addEventListener('close', (event) => {console.log("Closed."); socket = undefined;});
+        }
+        function sendMsg(msgToSend) {
+            if(socket!==undefined) {
+                socket.send(msgToSend);
+            }
+            else {
+                alert("There is no alive connection.");
+            }
+        }
+        function sendCustom() {
+            let msgToSend = document.getElementById("msgInput").value;
+            sendMsg(msgToSend);
+        }
+        function becomeMrX() {
+            sendMsg(`{"type" : "CLAIM_MR_X"}`);
+        }
+        function getOwnData() {
+            socket.send(`{"type": "GET_OWN_DATA"}`);
+        }
+        function stepTo() {
+            let pos = document.getElementById("stepTo").value;
+            let veh = document.getElementById("byVehicle").value;
+            socket.send(`{"type": "step", "toPos":${pos}, "byVehicle": "${veh}"}`);
+        }
+    </script>
+</head>
+
+<body onload="onPageLoad()">
+<center>
+<h1>Scotland Yard</h1>
+Room id:
+<input type="text" id="roomIdInput" placeholder="Room id" /> <br>
+<input type="button" onclick="connectWs()" value="Connect"/> <br>
+<textarea rows="6" cols="80">Example messages
+Become Mr. X and start the game: 
+{"type" : "CLAIM_MR_X"}
+Step to position 3 by taxi : 
+{"type": "step", "toPos":3, "byVehicle": "taxi"}
+Get your current state: 
+{"type": "GET_OWN_DATA"}
+</textarea>
+<h2>Send custom message:</h2>
+<textarea id="msgInput" rows="5" cols="50"></textarea> <br>
+<input type="button" onclick="sendCustom()" value="Send"/><br>
+<input type="button" onclick="becomeMrX()" value="Become Mr. X"/><input type="button" onclick="getOwnData()" value="Refresh my data"/><br>
+Step to position : <input type="text" id="stepTo" value="0"/> by vehicle: <input type="text" id="byVehicle" value="taxi"/> <input type="button" onclick="stepTo()" value="Step"/><br>
+<h2>Messages from the server:</h2>
+<textarea id="messageBox" rows="20" cols="50" disabled></textarea><br>
+</center>
+</body>
+</html>
