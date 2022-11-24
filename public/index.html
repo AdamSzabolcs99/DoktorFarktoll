@@ -2,9 +2,14 @@
   <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+  
+    <link rel=”stylesheet” href=”https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css”rel=”nofollow” integrity=”sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm” crossorigin=”anonymous”>
   </head>
 
+ 
   <script type="text/javascript">
+
+
 
     var players = []
  
@@ -19,12 +24,38 @@
     var playersPositions = {}
     var playerImages = []   
     var selectedPosStep = -1
+    
+
+
+
+function FrontEndMessageDisappear(){
+  document.getElementById("generalErrorMsg").style="display:none";
+
+}
+
+function bringButtonsForward(){
+  document.getElementById("choosen").style="display:block"
+              document.getElementById("ticketDiv").style="display:block"
+              document.getElementById("tableDiv").style="margin-left:30px!important;margin-top:70px;display:block;position:relative;left:150px!important;"
+
+              document.getElementById("eszkozDiv").style="display:block"
+              document.getElementById("buttonDiv").style="display:block"
+
+              document.getElementById("belepesDiv").style="display:none"
+              document.getElementById("roomIdInput").style="display:none"
+
+}
+
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
 
     function onPageLoad() {
+
         document.getElementById("messageBox").value = "";
     }
     function connectWs() {
-
+      document.getElementById("becomeMrXButton").disabled = false
         socket = new WebSocket('ws://localhost:8080/?roomid='+document.getElementById("roomIdInput").value);
         socket.addEventListener('open', (event) => {console.log("Connected.")});
         socket.addEventListener('message', (event) => { //You can parse messages and control the game here.
@@ -70,11 +101,31 @@
             drawMap()
           }
           
-          
+          if(s.type=="GAME_START"){
+  
+            document.getElementById("ifYouAreMrX").src="bobby.png"
+            document.getElementById("ifYouAreMrX").style=style="position:absolute;  display:block; right: 700px;  top: 40px;"
+            if (amIMrX==true){
+              document.getElementById("ifYouAreMrX").src="x.png"
+            document.getElementById("ifYouAreMrX").style=style="position:absolute;  display:block; right: 700px;  top: 40px;"
+            }
+              FrontEndMessage("Játék indul!" , "alert alert-warning");
+              delay(1000).then(() => bringButtonsForward());
+
+              document.getElementById("becomeMrXButton").style="display:none"
+            }
           if(s.type=="NEXT_ROUND"){
               roundCount +=1
+              FrontEndMessage("Sikeres lépés, következő kör." , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
             }
 
+            if(s.type=="STEP_ACCEPTED"){
+         
+              FrontEndMessage("Sikeres lépés!" , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
+
+            }
 
        
           if(s.type=="MR_X_LAST_TICKET"){
@@ -88,6 +139,10 @@
           }
           if(s.type=="YOU_ARE_MR_X"){
             amIMrX = true
+        
+            
+            FrontEndMessage("Te vagy Mr.X!" , "alert alert-danger");
+              delay(1000).then(() => FrontEndMessageDisappear());
           }
 
         });
@@ -107,6 +162,7 @@
     }
     function becomeMrX() {
         sendMsg(`{"type" : "CLAIM_MR_X"}`);
+        document.getElementById("becomeMrXButton").style="display:none"
     }
     function getOwnData() {
         socket.send(`{"type": "GET_OWN_DATA"}`);
@@ -126,60 +182,118 @@
 var testmessage = "?"
 </script>
 <body>
-  <div style="margin-top:50px">
-    <input type="text" style="margin-left: 100px; " id="roomIdInput" placeholder="Szoba azonositó" /> 
-    <input type="button"  style="margin-left: 10px;" onclick="connectWs()" value="Belépés"/> <br>
-  </div>    <div style="text-align: center; font-family: Raleway, sans-serif; font-size: xx-large; color:white"> Scotland Yard </div>
 
 
-<textarea id="messageBox" rows="20" cols="50" disabled style="display:none"></textarea><br>
+<!-- The Modal -->
+<div id="myModal" class="modal">
 
-    <div style="float:right; color:white; margin-right: 100px">
-        Eszköz választása:
-        <button onclick="selectBus()">
-            Busz
-        </button>
-        <button onclick="selectTaxi()">
-            Taxi
-        </button>
-        <button onclick="selectMetro()">
-            Metró
-        </button><br>
-        
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p id="generalErrorMsgMessage"></p>
+  </div>
+
+</div>
+
+<div class="mainDiv" id="mainDiv" >
+
+
+  <div style="margin-top:50px; margin-left:100px">
+    
+    <div class="input-group mb-3">
+      <div class="custom-file">
+        <input class="input-group-text"  type="text"  id="roomIdInput" placeholder="Szoba azonositó" /> 
+
+      </div>
+      <div class="input-group-prepend">
+        <input type="button" id="belepesDiv" style="margin-left:10px" class="btn btn-dark"  onclick="connectWs()" value="Belépés"/> 
+
+      </div>
+  </div>
+  </div>
+
+  <div class="input-group mb-3" style="margin-left:100px">
+    <div class="custom-file">
+      <input class="input-group-text" type="text"  id="eszkozDiv" placeholder="Eszköz választása" disabled style="background-color: #b0ddec; display:none"/> 
+
     </div>
-    <button style="margin-left: 100px; margin-bottom:30px" onclick="becomeMrX()">Mr. X szeretnék lenni!</button><br>
-    <span style="color: white; margin-left: 100px; margin-top:30px">Kiválasztott eszköz: </span>
-    <span id="selected" style="color:white"></span>
-    <div class="wrapper">
+    <div id="buttonDiv" style="display:none">
+
+  
+    <div class="input-group-prepend">
+
+      <button style="margin-left:10px" class="btn btn-light" onclick="selectBus()"> 
+  
+          Busz
+      </button>      </div> 
+       <div class="input-group-prepend">
+
+      <button  style="margin-left:10px" class="btn btn-light" onclick="selectTaxi()"> 
+     
+          Taxi
+      </button>     </div>
+      <div class="input-group-prepend">
+
+      <button  style="margin-left:10px" class="btn btn-light"onclick="selectMetro()"> 
+     
+          Metró
+      </button> </div>
+
+    </div>
+      <div  style="margin-left:10px" class="input-group-prepend">
+      <button class="btn btn-dark" id="becomeMrXButton" disabled onclick="becomeMrX()">Mr. X szeretnék lenni!</button>
+      <div id="ticketDiv" style="display:none">
+     
+      <div id="busTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0); position:relative; left:300; background-color: blue!important">Buszjegyek: </div>
+      <div id="metroTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0);position:relative; left:300;  background-color: red!important">Metrójegyek: </div>
+      <div id="taxiTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0);position:relative; left:300;  color:black!important; background-color: yellow!important"">Taxijegyek: </div>
         
-        <div style="width:1512px"><canvas style="margin-left: 100px; margin-top: 20; margin-bottom:90px" id="myCanvas" width="1512" height="779">
+      </div>
+      </div>
+    </div>
+   
+  </div>
+  <img src="x.png" id="ifYouAreMrX" style="position:absolute;  display:none; right: 700px;  top: 40px;"width="67">
+
+  <img src="finallogooo.png" style="position:absolute;   right: 0px;  top: -10px;"width="478">
+
+
+  <div style="text-align: center; font-family: Raleway, sans-serif; font-size: xx-large; color:white"> 
+ 
+   
+  </div>
+
+<textarea id="messageBox" rows="20" cols="50" disabled style="display:none"></textarea>
+
+<div class="input-group mb-3" style="margin-left:100px">
+  <div class="custom-file">
+    <input class="input-group-text" type="text"  id="choosen" placeholder="Lépés eszköze:" disabled style="background-color: #ffffff; display:none"/> 
+
+  </div>
+  
+  <div class="custom-file">
+    <button  id="selected" style="margin-left:10px; display:none;background-color: #2dc083; color:white" class="btn btn-light"> 
+  </div>
+
+
+</div>
+
+</div>
+
+
+
+
+
+ <div class="wrapper">
+
+        <div style="width:1312px"><canvas style="margin-left: 100px; margin-top: 20; margin-bottom:40px;margin-right:50px" id="myCanvas" width="1512" height="779">
         </canvas></div>
-        
-        <div style="margin-top:20px; margin-left:0px;color: white;">Jegyek
-            <table class="tg" style="margin-top:10px">
-            <thead>
-              <tr>
-                
-                <th class="tg-7btt" style="color: white;">Busz</th>
-                <th class="tg-7btt" style="color: white;">Metró</th>
-                <th class="tg-7btt" style="color: white;">Taxi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-               
-                <td class="tg-c3ow" style="color: white;" id="busTickets"></td>
-                <td class="tg-c3ow" style="color: white;" id="metroTickets"></td>
-                <td class="tg-c3ow" style="color: white;" id="taxiTickets"></td>
-              </tr>
-            </tbody>
-            </table>
-            <br /><br />
-<div style="margin-top:20px; color: white;">Utazási napló
-    <table class="tg" style="margin-top:30px">
+          <table class="table" style="margin-left:30px!important;margin-top:70px;display:none;position:relative;left:150px!important;" id="tableDiv">
     <thead>
-      <tr>
-        
+  
+      <tr class="table">
+     
+        <th class="tg-7btt">Mr. X útja</th>
         <th class="tg-7btt">Kör</th>
         <th class="tg-7btt">Utazási mód</th>
 
@@ -187,124 +301,125 @@ var testmessage = "?"
     </thead>
     <tbody>
         <tr>
-        
+          <th class="tg-7btt"></th>
+
             <th class="tg-7btt">1</th>
             <th class="tg-7btt" id="round1"></th>
     
           </tr>
 
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">2</td>
         <td class="tg-c3ow" id="round2"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">3</td>
         <td class="tg-c3ow" id="round3"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">4</td>
         <td class="tg-c3ow" id="round4"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">5</td>
         <td class="tg-c3ow" id="round5"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">6</td>
         <td class="tg-c3ow" id="round6"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">7</td>
         <td class="tg-c3ow" id="round7"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">8</td>
         <td class="tg-c3ow" id="round8"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">9</td>
         <td class="tg-c3ow" id="round9"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">10</td>
         <td class="tg-c3ow" id="round10"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">11</td>
         <td class="tg-c3ow" id="round11"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">12</td>
         <td class="tg-c3ow" id="round12"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">13</td>
         <td class="tg-c3ow" id="round13"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">14</td>
         <td class="tg-c3ow" id="round14"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">15</td>
         <td class="tg-c3ow" id="round15"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">16</td>
         <td class="tg-c3ow" id="round16"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">17</td>
         <td class="tg-c3ow" id="round17"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">18</td>
         <td class="tg-c3ow" id="round18"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">19</td>
         <td class="tg-c3ow" id="round19"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">20</td>
         <td class="tg-c3ow" id="round20"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">21</td>
         <td class="tg-c3ow"id="round21"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">22</td>
         <td class="tg-c3ow" id="round22"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">23</td>
         <td class="tg-c3ow" id="round23"></td>
       </tr>
       <tr>
-       
+        <th class="tg-7btt"></th>
         <td class="tg-c3ow">24</td>
         <td class="tg-c3ow" id="round24"></td>
       </tr>
@@ -313,21 +428,61 @@ var testmessage = "?"
     </table></div>
 </div>
 
-</div>
+
+
+
 <style>
     body{
-        background-image: linear-gradient(to right, #00b4db, #0083b0);
-        
-        }
+       background-image: linear-gradient(to right, #cad1db, #cecfdf);
+       
+      }
+
+      /* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
 </style>
 
 
 
     <style type="text/css">
-        .tg  {border-collapse:collapse;border-spacing:0; color:white; background-color: #665a5a;}
-        .tg td{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:10px; color:white;
+        .tg  {border-collapse:collapse;border-spacing:0; color:white; background-color: #454350;}
+        .tg td{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:13px; color:white;
           overflow:hidden;padding:5px 5px;word-break:normal;}
-        .tg th{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:10px;
+        .tg th{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:13px;
           font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
         .tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
         .tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
@@ -355,6 +510,8 @@ var testmessage = "?"
     <img id="player7" style="display: none;">
     <img id="player8" style="display: none;">
     
+
+
     <style>
         .wrapper {
       display: flex;
@@ -363,25 +520,35 @@ var testmessage = "?"
     .wrapper > div {
       flex: 1;
     }
+
+
+    .tickett {
+      color:white!important;
+      background-color: rgb(27, 27, 27)!important;
+      font-family:'Courier New', Courier, monospace
+    }
         </style>
 <script>
-
 
 var Acanvas = document.createElement('canvas');
 var playerCtx = Acanvas.getContext('2d');
 
 function selectBus(){
+
     selectedMode = "bus"
     document.getElementById("selected").textContent="Busz"
+    document.getElementById("selected").style="display:block; background-color: blue;margin-left:10px; color:white"
 
 }
 function selectTaxi(){
     selectedMode = "taxi"
     document.getElementById("selected").textContent="Taxi"
+    document.getElementById("selected").style="display:block;background-color: yellow;margin-left:10px;"
 }
 function selectMetro(){
    selectedMode = "metro"
    document.getElementById("selected").textContent="Metró"
+   document.getElementById("selected").style="display:block;background-color: red;margin-left:10px; color:white"
 
 }
 
@@ -709,12 +876,45 @@ tmpCtx.drawImage(background,0,0);
 for (let i=0; i<players.length;i++){
     drawPoint(graphPointPositions,30,playersPositions[i],i,selectedPosStep)
 }
-document.getElementById("busTickets").textContent = busTickets
-document.getElementById("metroTickets").textContent = metroTickets
-document.getElementById("taxiTickets").textContent = taxiTickets
+document.getElementById("busTickets").textContent = "Buszjegyek: " + busTickets
+document.getElementById("metroTickets").textContent = "Metrójegyek: " + metroTickets
+document.getElementById("taxiTickets").textContent = "Taxijegyek: " + taxiTickets
 }
 
 </script>
-</body>
 
+</div>
+<script src=”https://code.jquery.com/jquery-3.2.1.slim.min.js” integrity=”sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN” crossorigin=”anonymous”></script>
+
+</body>
+<script>
+
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on the button, open the modal
+function FrontEndMessage(text,type){
+  document.getElementById("generalErrorMsgMessage").textContent = text
+  modal.style = "display: block"
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+  modal.style= "display:none";
+  bringButtonsForward()
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style = "display:none";
+  }
+}
+</script>
 </html>
