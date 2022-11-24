@@ -18,6 +18,7 @@
     var amIMrX = false
     var playersPositions = {}
     var playerImages = []   
+    var selectedPosStep = -1
 
     function onPageLoad() {
         document.getElementById("messageBox").value = "";
@@ -436,25 +437,30 @@ const busMatrix = [
 ]
 
 
-const graphPoints = [0,1,2,3,4,5,6,7,8,9]
+const graphPoints = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
 
 
 var graphPointPositions = [
-[971,570], //*
-[503,333], //*
-[796,283], //*
-[420,816], //*
-[625,108], //*
-[576,556], //*
-[1056,929], //*
-[1194,800],
-[1272,279],
-[1437,508]
+[406,142], //Batthyany
+[703,267], //Szabadsag
+[469,428], //Lanchid
+[782,401], //Gozsdu
+[600,733], //Rudas
+[1004,196], //Oktogon
+[1096,317], //Instant
+[1163,492], //Blaha
+[1180,631], //Rákóczi
+[959,747], //Kálvin
+[1151,870], //Corvin
+[1472,383], //Keleti
+[1665,391], //Arena
+[1439,51], //Paprika
+[1244,182] //Allatorvos
 ]
 
 for (let i=0; i<graphPointPositions.length; i++){
-    graphPointPositions[i][0] = Math.round(graphPointPositions[i][0]*0.79570990806)
-    graphPointPositions[i][1] = Math.round(graphPointPositions[i][1]*0.79570990806)
+    graphPointPositions[i][0] = (Math.round(graphPointPositions[i][0]-255)*0.76734192756)
+    graphPointPositions[i][1] = Math.round(graphPointPositions[i][1]*0.76734192756)
 }
 
 var graphPointLengths = []
@@ -470,7 +476,13 @@ const graphImages = [
 "corvin.png", //*
 "pillango.png",
 "nagyvarad.png",
-"arena.png"
+"arena.png",
+"fiume.png",
+"instant.png",
+"hb.png",
+"batthyány.png",
+"kálvin.png",
+"rákóczi.png"
 ]   
 
 
@@ -481,13 +493,13 @@ var canvas = document.getElementById("myCanvas");
 const radius = 30
 
 var background = new Image();
-background.src = "download.png";
+background.src = "miniature.png";
 background.id="background"
 background.style="display:none"
 document.body.appendChild(background);
 
 background.onload = function(){
-    tmpCtx.drawImage(background,0,0);   
+  tmpCtx.drawImage(background,0,0);   
 
 };
 
@@ -592,7 +604,11 @@ for (let i=0; i<10;i++){
 }
 
 
-function drawPoint(arr,radius,position,sorszam){
+function drawPoint(arr,radius,position,sorszam, hovalep){
+
+  if(hovalep == -1) {
+    hovalep = position
+  }
   var t = 'player' + (sorszam)
   var index= position
   var thumbImg = document.getElementById(t)
@@ -604,36 +620,45 @@ function drawPoint(arr,radius,position,sorszam){
     }
     else{
       thumbImg.onload = function() {
-    tmpCtx.save();
-        tmpCtx.beginPath();
-        tmpCtx.arc(arr[index][0],arr[index][1], radius, 0, Math.PI * 2, true);
-        tmpCtx.closePath();
-        tmpCtx.clip();
-        tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
+     tmpCtx.save();
+
         
-        tmpCtx.beginPath();
-        tmpCtx.arc(0,0, radius, 0, Math.PI * 2, true);
-        tmpCtx.clip();
-        tmpCtx.closePath();
-        tmpCtx.restore();
+      tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
+
+
+        tmpCtx.strokeStyle = "black";
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(arr[hovalep][0],arr[hovalep][1]);
+            tmpCtx.lineTo(arr[hovalep][0],arr[hovalep][1]);
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+            tmpCtx.arc(arr[hovalep][0],arr[hovalep][1], radius-5, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+
 };
     }
   }
   else{
   
       thumbImg.onload = function() {
-    tmpCtx.save();
-        tmpCtx.beginPath();
-        tmpCtx.arc(arr[index][0],arr[index][1], radius, 0, Math.PI * 2, true);
-        tmpCtx.closePath();
-        tmpCtx.clip();
+        tmpCtx.save();
+
         tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
-        
-        tmpCtx.beginPath();
-        tmpCtx.arc(0,0, radius, 0, Math.PI * 2, true);
-        tmpCtx.clip();
-        tmpCtx.closePath();
-        tmpCtx.restore();
+
+        if(thumbImg.src.includes("white")){
+          tmpCtx.strokeStyle = "black";
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(arr[hovalep][0],arr[hovalep][1]);
+            
+            tmpCtx.lineTo(arr[hovalep][0],arr[hovalep][1]);
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+            tmpCtx.arc(arr[hovalep][0],arr[hovalep][1], radius-5, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+}
+ 
 };
     
   }
@@ -670,7 +695,7 @@ for(let i=0;i<graphPointPositions.length;i++){
 }
 
 } 
-
+selectedPosStep = ind
 stepTo(ind,selectedMode) //pos,veh
 
 }, false);
@@ -682,7 +707,7 @@ function drawMap(){
 //drawLines(radius);
 tmpCtx.drawImage(background,0,0);   
 for (let i=0; i<players.length;i++){
-    drawPoint(graphPointPositions,30,playersPositions[i],i)
+    drawPoint(graphPointPositions,30,playersPositions[i],i,selectedPosStep)
 }
 document.getElementById("busTickets").textContent = busTickets
 document.getElementById("metroTickets").textContent = metroTickets
