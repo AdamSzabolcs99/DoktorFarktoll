@@ -86,6 +86,18 @@ function getMrXPosition(playerData) {
     return undefined;
 }
 
+function isMrX(id) {
+    return;
+}
+
+function mrXStepped(playerData) {
+    for(k in Object.keys(playerData)) {
+        if(playerData[k].role==="X") {
+            return playerData[k].stepped===1;
+        } 
+    }
+    return undefined;
+}
 
 function notifyEveryone(msg) {
     wss.clients.forEach(function(client) {
@@ -141,12 +153,11 @@ function onMessage(client, data) {
             client.send(`{"type": "alert", msg: "Game hasn't started because nobody has taken Mr. X role yet."}`);
             return;
         }
-        if(playerStepped(client, msg, currentRoomData.playerData)) {
+        if(playerStepped(client, msg, currentRoomData.playerData, roomId)) {
             client.send(`{"type":"STEP_ACCEPTED"}`);
             currentRoomData.stepCount += 1;
             console.log(`Current state:\n${JSON.stringify(currentRoomData.playerData)}`);
             if(currentRoomData.stepCount>=currentRoomData.allPlayers) {
-                client.send(`{"type":"ROUND_ENDED"}`);
                 currentRoomData.stepCount = 0;
                 currentRoomData.roundCount = currentRoomData.roundCount + 1;
                 if(endCheck(currentRoomData.playerData, currentRoomData.roundCount, roomId, true)) {
@@ -156,6 +167,7 @@ function onMessage(client, data) {
                 else {
                     console.log("Game goes on");
                     notifyEveryone(`{"type": "NEXT_ROUND"}`); //New visible game data should be also sent
+                    notifyEveryone(`{"type": "MR_X_LAST_TICKET", "ticket": "${currentRoomData.lastMrXTicket}"}`);
                     broadcastVisibleState(currentRoomData.roundCount, currentRoomData.playerData);
                     resetStepCount(roomId);
                 }
@@ -175,7 +187,7 @@ function onMessage(client, data) {
             player.role = "X";
             player.tickets = {"taxi": 3, "bus": 3, "metro": 2, "joker": 2, "double": 2},
             player.color = 'white';
-            client.send(`{"type": "YOU_ARE_MR_X"`);
+            client.send(`{"type": "YOU_ARE_MR_X"}`);
             notifyEveryone(`{"type": "GAME_START"}`);
             broadcastVisibleState(3, currentRoomData.playerData);
             currentRoomData.MrXClaimed = true;
@@ -197,6 +209,7 @@ function resetStepCount(roomID) {
     for (playerId in Object.keys(gameRoomVariables[roomID].playerData)) {
         gameRoomVariables[roomID].playerData[playerId].stepped = 0;
     }
+    gameRoomVariables[roomID].lastMrXTicket = "empty";
 }
 
 function isAllowedStep(fromPos, toPos, byVehicle) {
@@ -220,13 +233,20 @@ function isAllowedStep(fromPos, toPos, byVehicle) {
 /*
 stepMessage : {"type": "step", "toPos":3, "byVehicle": "taxi"}
 */
-function playerStepped(client, msg, playerData) {
+function playerStepped(client, msg, playerData, roomId) {
     let id = client.id;
     let player = playerData[id];
+    if(player.role!=="X" && !mrXStepped(playerData)) {
+        console.log("Mr. X must step first!");
+        return false;
+    }
     if(isAllowedStep(player.position, msg.toPos, msg.byVehicle) && player.tickets[msg.byVehicle] > 0 && player.stepped == 0) {
         player.position = msg.toPos;
         player.stepped = 1;
         player.tickets[msg.byVehicle] = player.tickets[msg.byVehicle] - 1;
+        if(player.role==="X") {
+            gameRoomVariables[roomId].lastMrXTicket = msg.byVehicle;
+        }
         return true;
     }
     else {
@@ -284,6 +304,7 @@ wss.on('connection', function connection(client, req) {
             MrXClaimed : false,
             allPlayers : 0,
             freeColors : ['blue', 'red', 'yellow', 'green', 'purple', 'orange', 'black'],
+            lastMrXTicket : "",
             startingPositions : graphPoints,
         }
     }
