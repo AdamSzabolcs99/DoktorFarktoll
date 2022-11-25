@@ -19,6 +19,7 @@
     var busTickets = -1
     var metroTickets = -1
     var taxiTickets = -1
+    var boatTickets = -1
     var myPosition = -1
     var amIMrX = false
     var playersPositions = {}
@@ -29,8 +30,7 @@
 
 
 function FrontEndMessageDisappear(){
-  document.getElementById("generalErrorMsgMessage").textContent = ""
-
+  document.getElementById("generalErrorMsgMessage").style="color:white; margin-top:10px;"
   bringButtonsForward()
 }
 
@@ -94,7 +94,7 @@ function delay(time) {
               busTickets = s.data[i].tickets.bus
               metroTickets = s.data[i].tickets.metro
               taxiTickets = s.data[i].tickets.taxi
-
+              //boatTickets = s.data[i].tickets.boat
             }
            
           }
@@ -141,12 +141,14 @@ function delay(time) {
               delay(1000).then(() => FrontEndMessageDisappear());
 
               document.getElementById("becomeMrXButton").style="display:none"
-              document.getElementById("tableDiv").style="margin-left:100px!important;margin-top:60px!important;display:block; width:1512px!important;color: rgb(255, 255, 255)!important;" 
+              delay(1000).then(() =>   document.getElementById("tableDiv").style="margin-left:100px!important;margin-top:60px!important;display:block; width:1512px!important;color: rgb(255, 255, 255)!important;" );
+
+            
 
             }
           if(s.type=="NEXT_ROUND"){
               roundCount +=1
-              FrontEndMessage("Sikeres lépés, következő kör." , "alert alert-warning");
+              FrontEndMessage("Következő kör!" , "alert alert-warning");
               delay(1000).then(() => FrontEndMessageDisappear());
             }
 
@@ -176,12 +178,13 @@ function delay(time) {
           }
           if(s.type=="YOU_ARE_MR_X"){
             amIMrX = true
-        
+            
             
             FrontEndMessage("Te vagy Mr.X!" , "alert alert-danger");
               delay(1000).then(() => FrontEndMessageDisappear());
-          }
 
+          }
+          
         });
         socket.addEventListener('close', (event) => {console.log("Closed."); socket = undefined;});
     }
@@ -224,7 +227,6 @@ var testmessage = "?"
     " type="video/mp4">
     Your browser does not support the video tag.
   </video>
-  <p id="generalErrorMsgMessage" style="color:white; position:absolute; left:50px; top:20px"></p>
 
 
 
@@ -234,6 +236,7 @@ var testmessage = "?"
 
   <div class="input-group mb-3" style="margin-left:100px">
     <div class="custom-file">
+
       <input class="input-group-text" type="text"  id="eszkozDiv" placeholder="Eszköz választása" disabled style="background-color: #b0ddec; display:none"/> 
       <div style="margin-top:50px; display:none;" id="buttonDiv2">
 
@@ -250,8 +253,15 @@ var testmessage = "?"
         <button  id="selectmetro" style="margin-left:10px;background-color: red;color:white;"class="btn btn-light"onclick="selectMetro()"> 
           
             Metró
-        </button> </div>
-  
+
+
+        <button  id="selectBoat" style="margin-left:10px;background-color: rgb(0, 0, 0);color:white;"class="btn btn-light"onclick="selectBoat()"> 
+          
+          Komp
+      </button>
+        </button><div id="generalErrorMsgMessage" style="color:white;margin-top:10px;">Teszt</div></div>
+        
+
     </div>
     <div id="buttonDiv" style="display:none">
       <div class="input-group mb-3" style="margin-left:100px">
@@ -279,7 +289,8 @@ var testmessage = "?"
       <div id="busTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0); margin-left:300px; background-color: blue!important">Buszjegyek: </div>
       <div id="metroTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0);margin-left:300px;  background-color: red!important">Metrójegyek: </div>
       <div id="taxiTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0);margin-left:300px;   color:black!important; background-color: yellow!important">Taxijegyek: </div>
-        
+      <div id="boatTickets" class="input-group-text tickett" style="color: rgb(255, 255, 255);margin-left:300px;   color:rgb(255, 255, 255)!important; background-color: rgb(0, 0, 0)!important">Kompjegyek: </div>
+
       </div>
       </div>
     </div>
@@ -292,12 +303,12 @@ var testmessage = "?"
 
   <div style="position:relative;left: 42%; top:45%; width:50%;">
     <div>
-      <input class="input-group-text"  style="height: 120px" type="text"  id="roomIdInput" placeholder="Szoba azonositó" /> 
-      <button id="belepesDiv" style="margin-top:20px;height: 60px" class="btn btn-warning"  onclick="connectWs()">Belépés</button>
+      <input class="input-group-text"  style="height: 120px" type="text"  id="roomIdInput" placeholder="Szoba azonositó" /> <button id="belepesDiv"  class="btn btn-primary"  onclick="connectWs()">Belépés</button>
+
     </div>
 
   <div style="text-align: center; font-family: Raleway, sans-serif; font-size: xx-large; color:white"> 
- 
+
    
   </div>
 
@@ -543,24 +554,30 @@ function selectBus(){
     selectedMode = "bus"
     document.getElementById("selected").textContent="Busz"
     document.getElementById("selected").style="display:block; width:200px!important;background-color: blue;margin-left:10px; color:white"
-
+    document.getElementById("generalErrorMsgMessage").textContent = "Busz kiválasztva!"
 
 }
 function selectTaxi(){
     selectedMode = "taxi"
     document.getElementById("selected").textContent="Taxi"
     document.getElementById("selected").style="display:block;width:200px!important;background-color: yellow;margin-left:10px;"
-
+    document.getElementById("generalErrorMsgMessage").textContent = "Taxi kiválasztva!"
 
 }
 function selectMetro(){
    selectedMode = "metro"
    document.getElementById("selected").textContent="Metró"
    document.getElementById("selected").style="display:block;width:200px!important;background-color: red;margin-left:10px; color:white"
-
+   document.getElementById("generalErrorMsgMessage").textContent = "Metró kiválasztva!"
 
 }
+function selectBoat(){
+   selectedMode = "boat"
+   document.getElementById("selected").textContent="Komp"
+   document.getElementById("selected").style="display:block;width:200px!important;background-color: black;margin-left:10px; color:white"
+   document.getElementById("generalErrorMsgMessage").textContent = "Komp kiválasztva!"
 
+}
 var selectedMode = "none"
 
 
@@ -791,6 +808,7 @@ function drawPoint(arr,radius,position,sorszam, hovalep){
   thumbImg.src = playerImages[sorszam]
   if(amIMrX==false){
    
+
     if(thumbImg.src.includes("white")){
 
     }
@@ -859,7 +877,10 @@ stepTo(ind,selectedMode) //pos,veh
 
 
 function drawMap(){
-
+if(!amIMrX){
+  document.getElementById("selectBoat").style="display:none"
+  document.getElementById("boatTickets").style="display:none"
+}
 
 //drawLines(radius);
 tmpCtx.drawImage(background,0,0);   
@@ -887,10 +908,16 @@ if(taxiTickets==0){
   document.getElementById("taxiTickets").disabled=true
   
 }
-
+if(boatTickets==0){
+  document.getElementById("selectBoat").disabled = true
+  document.getElementById("boatTickets").style="color: black;margin-left:300px;  background-color: grey!important"
+  document.getElementById("boatTickets").disabled=true
+  
+}
 document.getElementById("busTickets").textContent = "Buszjegyek: " + busTickets
 document.getElementById("metroTickets").textContent = "Metrójegyek: " + metroTickets
 document.getElementById("taxiTickets").textContent = "Taxijegyek: " + taxiTickets
+document.getElementById("boatTickets").textContent = "Kompjegyek: " + boatTickets
 
 }
 
@@ -906,6 +933,7 @@ document.getElementById("taxiTickets").textContent = "Taxijegyek: " + taxiTicket
 // When the user clicks on the button, open the modal
 function FrontEndMessage(text,type){
   document.getElementById("generalErrorMsgMessage").textContent = text
+  document.getElementById("generalErrorMsgMessage").style="color:white;margin-top:10px;"
 //  modal.style = "display: block"
 }
 
