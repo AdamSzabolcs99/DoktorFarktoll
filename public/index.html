@@ -29,9 +29,18 @@
 
 
 function FrontEndMessageDisappear(){
-  document.getElementById("generalErrorMsg").style="display:none";
-
+  // Get the modal
+  var modal = document.getElementById("myModal");
+  modal.style= "display:none";
+  bringButtonsForward()
 }
+
+function FrontEndMessageDisappearOnly(){
+  // Get the modal
+  var modal = document.getElementById("myModal");
+  modal.style= "display:none";
+}
+
 
 function bringButtonsForward(){
   document.getElementById("choosen").style="display:block"
@@ -55,12 +64,15 @@ function delay(time) {
         document.getElementById("messageBox").value = "";
     }
     function connectWs() {
-      document.getElementById("becomeMrXButton").disabled = false
+      document.getElementById("becomeMrXButton").style=""
         socket = new WebSocket('ws://localhost:8080/?roomid='+document.getElementById("roomIdInput").value);
         socket.addEventListener('open', (event) => {console.log("Connected.")});
         socket.addEventListener('message', (event) => { //You can parse messages and control the game here.
-          
+
+         
           var s = JSON.parse(event.data)
+
+       
           if(s.type=="STATE_UPDATE"){
             
       
@@ -99,8 +111,16 @@ function delay(time) {
             metroTickets = s.data.tickets.metro
             taxiTickets = s.data.tickets.taxi
             drawMap()
+            
+            
+            delay(1000).then(() => FrontEndMessageDisappear());
           }
-          
+
+          if(s.type=="GAME_ENDED"){
+            FrontEndMessage("Játék vége!", "alert alert-warning")
+          }
+
+
           if(s.type=="GAME_START"){
   
             document.getElementById("ifYouAreMrX").src="bobby.png"
@@ -110,7 +130,7 @@ function delay(time) {
             document.getElementById("ifYouAreMrX").style=style="position:absolute;  display:block; right: 700px;  top: 40px;"
             }
               FrontEndMessage("Játék indul!" , "alert alert-warning");
-              delay(1000).then(() => bringButtonsForward());
+              delay(1000).then(() => FrontEndMessageDisappear());
 
               document.getElementById("becomeMrXButton").style="display:none"
             }
@@ -120,13 +140,17 @@ function delay(time) {
               delay(1000).then(() => FrontEndMessageDisappear());
             }
 
-            if(s.type=="STEP_ACCEPTED"){
-         
-              FrontEndMessage("Sikeres lépés!" , "alert alert-warning");
+            if(s.type=="STEP_NOT_ACCEPTED"){
+              FrontEndMessage("Ide nem tudsz lépni!" , "alert alert-warning");
               delay(1000).then(() => FrontEndMessageDisappear());
 
             }
+            if(s.type=="STEP_ACCEPTED"){
+         
+              FrontEndMessage("Sikeres lépés! Most a többiek jönnek!" , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
 
+        }
        
           if(s.type=="MR_X_LAST_TICKET"){
 
@@ -136,6 +160,7 @@ function delay(time) {
           if(s.type=="log"){
             myid_ = s.msg.split(":")
             myID = myid_[1].trim()
+
           }
           if(s.type=="YOU_ARE_MR_X"){
             amIMrX = true
@@ -222,26 +247,26 @@ var testmessage = "?"
   
     <div class="input-group-prepend">
 
-      <button style="margin-left:10px" class="btn btn-light" onclick="selectBus()"> 
+      <button id="selectbus" style="margin-left:10px" class="btn btn-light" onclick="selectBus()"> 
   
           Busz
       </button>      </div> 
        <div class="input-group-prepend">
 
-      <button  style="margin-left:10px" class="btn btn-light" onclick="selectTaxi()"> 
+      <button  id="selecttaxi" style="margin-left:10px" class="btn btn-light" onclick="selectTaxi()"> 
      
           Taxi
       </button>     </div>
       <div class="input-group-prepend">
 
-      <button  style="margin-left:10px" class="btn btn-light"onclick="selectMetro()"> 
+      <button  id="selectmetro" style="margin-left:10px" class="btn btn-light"onclick="selectMetro()"> 
      
           Metró
       </button> </div>
 
     </div>
       <div  style="margin-left:10px" class="input-group-prepend">
-      <button class="btn btn-dark" id="becomeMrXButton" disabled onclick="becomeMrX()">Mr. X szeretnék lenni!</button>
+      <button class="btn btn-dark" id="becomeMrXButton" style="display:none" onclick="becomeMrX()">Mr. X szeretnék lenni!</button>
       <div id="ticketDiv" style="display:none">
      
       <div id="busTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0); position:relative; left:300; background-color: blue!important">Buszjegyek: </div>
@@ -793,15 +818,7 @@ function drawPoint(arr,radius,position,sorszam, hovalep){
       tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
 
 
-        tmpCtx.strokeStyle = "black";
-            tmpCtx.beginPath()
-            tmpCtx.moveTo(arr[hovalep][0],arr[hovalep][1]);
-            tmpCtx.lineTo(arr[hovalep][0],arr[hovalep][1]);
-            tmpCtx.closePath()
-            tmpCtx.beginPath()
-            tmpCtx.arc(arr[hovalep][0],arr[hovalep][1], radius-5, 0, Math.PI * 2, true);
-            tmpCtx.stroke();
-            tmpCtx.closePath()
+      
 
 };
     }
@@ -813,18 +830,7 @@ function drawPoint(arr,radius,position,sorszam, hovalep){
 
         tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
 
-        if(thumbImg.src.includes("white")){
-          tmpCtx.strokeStyle = "black";
-            tmpCtx.beginPath()
-            tmpCtx.moveTo(arr[hovalep][0],arr[hovalep][1]);
-            
-            tmpCtx.lineTo(arr[hovalep][0],arr[hovalep][1]);
-            tmpCtx.closePath()
-            tmpCtx.beginPath()
-            tmpCtx.arc(arr[hovalep][0],arr[hovalep][1], radius-5, 0, Math.PI * 2, true);
-            tmpCtx.stroke();
-            tmpCtx.closePath()
-}
+
  
 };
     
@@ -876,6 +882,27 @@ tmpCtx.drawImage(background,0,0);
 for (let i=0; i<players.length;i++){
     drawPoint(graphPointPositions,30,playersPositions[i],i,selectedPosStep)
 }
+
+if(busTickets==0){
+  document.getElementById("selectbus").disabled = true
+  document.getElementById("selected").style="display:none"
+  document.getElementById("busTickets").style="color: rgb(0, 0, 0);position:relative; left:300;  background-color: #10106b!important"
+
+}
+
+if(metroTickets==0){
+  document.getElementById("selectmetro").disabled = true
+  document.getElementById("selected").style="display:none"
+  document.getElementById("metroTickets").style="color: rgb(0, 0, 0);position:relative; left:300;  background-color: #752822!important"
+
+}
+
+if(taxiTickets==0){
+  document.getElementById("selecttaxi").disabled = true
+  document.getElementById("selected").style="display:none"
+  document.getElementById("taxiTickets").style="color: rgb(0, 0, 0);position:relative; left:300;  background-color: #b3a815!important"
+}
+
 document.getElementById("busTickets").textContent = "Buszjegyek: " + busTickets
 document.getElementById("metroTickets").textContent = "Metrójegyek: " + metroTickets
 document.getElementById("taxiTickets").textContent = "Taxijegyek: " + taxiTickets
