@@ -143,7 +143,12 @@ function delay(time) {
               document.getElementById("becomeMrXButton").style="display:none"
               delay(1000).then(() =>   document.getElementById("tableDiv").style="margin-left:100px!important;margin-top:60px!important;display:block; width:1512px!important;color: rgb(255, 255, 255)!important;" );
 
-            
+              for(let y=1;y<25;y++){
+                let u = "round" + y
+               
+                document.getElementById(u).textContent ="metro"
+
+    }
 
             }
           if(s.type=="NEXT_ROUND"){
@@ -167,6 +172,7 @@ function delay(time) {
           if(s.type=="MR_X_LAST_TICKET"){
 
               addMrXRoute(s.ticket,roundCount)
+              //TODO ADD_MR_X_PLACE
             }
               
           if(s.type=="log"){
@@ -216,8 +222,9 @@ function delay(time) {
     function addMrXRoute(mode,round){
       document.getElementById("round" + round).textContent = mode
     }
-
-
+    function addMrPlace(place,round){
+      document.getElementById("round_" + round).textContent = place
+    }
 var testmessage = "?"
 
 </script>
@@ -333,110 +340,165 @@ var testmessage = "?"
 
     <tr>
  
-      <th class="tg-7btt">Kör</th>
-      <th class="tg-7btt">Utazási mód</th>
+    
+     
 
     </tr>
+
+   
   </thead>
   <tbody>
       <tr>
+        <th class="tg-7btt">Kör</th>
+          <th class="tg-c3ow">1</th>
+          <td class="tg-c3ow">2</td>
+          <td class="tg-7btt">3</td>
+          <td class="tg-c3ow">4</td>
+           <td class="tg-c3ow">5</td>
+ 
+          <td class="tg-c3ow">6</td>
+          <td class="tg-c3ow">7</td>
 
-          <th class="tg-7btt">1</th>
-          <th class="tg-7btt" id="round1"></th>
-        </tr>
-    <tr>
-      <td class="tg-c3ow">2</td>
-      <td class="tg-c3ow" id="round2"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">3</td>
-      <td class="tg-c3ow" id="round3"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">4</td>
-      <td class="tg-c3ow" id="round4"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">5</td>
-      <td class="tg-c3ow" id="round5"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">6</td>
-      <td class="tg-c3ow" id="round6"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">7</td>
-      <td class="tg-c3ow" id="round7"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">8</td>
-      <td class="tg-c3ow" id="round8"></td>
-    </tr>
-    <tr>
+      <td class="tg-7btt">8</td>
+    
       <td class="tg-c3ow">9</td>
-      <td class="tg-c3ow" id="round9"></td>
-    </tr>
-    <tr>
+   
       <td class="tg-c3ow">10</td>
-      <td class="tg-c3ow" id="round10"></td>
-    </tr>
-    <tr>
+   
       <td class="tg-c3ow">11</td>
-      <td class="tg-c3ow" id="round11"></td>
-    </tr>
-    <tr>
+   
       <td class="tg-c3ow">12</td>
-      <td class="tg-c3ow" id="round12"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">13</td>
-      <td class="tg-c3ow" id="round13"></td>
-    </tr>
-    <tr>
+   
+      <td class="tg-7btt">13</td>
+    
       <td class="tg-c3ow">14</td>
-      <td class="tg-c3ow" id="round14"></td>
-    </tr>
-    <tr>
+    
       <td class="tg-c3ow">15</td>
-      <td class="tg-c3ow" id="round15"></td>
-    </tr>
-    <tr>
+   
       <td class="tg-c3ow">16</td>
-      <td class="tg-c3ow" id="round16"></td>
-    </tr>
-    <tr>
+    
       <td class="tg-c3ow">17</td>
-      <td class="tg-c3ow" id="round17"></td>
-    </tr>
-    <tr>
-      <td class="tg-c3ow">18</td>
-      <td class="tg-c3ow" id="round18"></td>
-    </tr>
-    <tr>
+   
+      <td class="tg-7btt">18</td>
+   
       <td class="tg-c3ow">19</td>
-      <td class="tg-c3ow" id="round19"></td>
-    </tr>
-    <tr>
+    
       <td class="tg-c3ow">20</td>
-      <td class="tg-c3ow" id="round20"></td>
-    </tr>
-    <tr>
+   
       <td class="tg-c3ow">21</td>
-      <td class="tg-c3ow"id="round21"></td>
-    </tr>
-    <tr>
+   
       <td class="tg-c3ow">22</td>
-      <td class="tg-c3ow" id="round22"></td>
-    </tr>
-    <tr>
+    
       <td class="tg-c3ow">23</td>
-      <td class="tg-c3ow" id="round23"></td>
+   
+      <td class="tg-7btt">24</td>
+    
     </tr>
     <tr>
-      <td class="tg-c3ow">24</td>
-      <td class="tg-c3ow" id="round24"></td>
+      <th class="tg-7btt">Mód</th>
+      <td class="tg-c3ow" id="round1"></td>
+
+      <td class="tg-c3ow" id="round2"></td>
+
+
+      <td class="tg-7btt" id="round3"></td>
+
+
+      <td class="tg-c3ow" id="round4"></td>
+
+
+
+      <td class="tg-c3ow" id="round5"></td>
+
+
+      <td class="tg-c3ow" id="round6"></td>
+
+
+      <td class="tg-c3ow" id="round7"></td>
+
+
+      <td class="tg-7btt" id="round8"></td>
+
+      <td class="tg-c3ow" id="round9"></td>
+
+      <td class="tg-c3ow" id="round10"></td>
+
+
+
+
+      <td class="tg-c3ow" id="round11"></td>
+
+      <td class="tg-c3ow" id="round12"></td>
+
+      <td class="tg-7btt" id="round13"></td>
+
+
+
+      <td class="tg-c3ow" id="round14"></td>
+
+
+      <td class="tg-c3ow" id="round15"></td>
+
+
+
+      <td class="tg-c3ow" id="round16"></td>
+
+
+
+      <td class="tg-c3ow" id="round17"></td>
+
+
+
+      <td class="tg-7btt" id="round18"></td>
+
+
+      <td class="tg-c3ow" id="round19"></td>
+
+
+
+      <td class="tg-c3ow" id="round20"></td>
+
+
+      <td class="tg-c3ow"id="round21"></td>
+
+
+      <td class="tg-c3ow" id="round22"></td>
+
+
+      <td class="tg-c3ow" id="round23"></td>
+
+      <td class="tg-7btt" id="round24"></td>
     </tr>
 
+    <tr>
+      
+      <td class="tg-7btt">Hely</td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_3"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_8"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_13"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_18"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_24"></td>
+
+    </tr>
   </tbody>
   </table>
     
@@ -496,12 +558,20 @@ body{
         .table  {border-collapse:collapse;border-spacing:10px; color:rgb(255, 255, 255);line-height: 10px!important;
    min-height: 10px!important;
    height: 10px!important;}
-        .tg td{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:8px!important; color:white;
+        .tg td{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:6px!important; color:white;
           overflow:hidden;padding:3px 3px!important;word-break:normal;}
-        .tg th{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:8px!important;
+        .tg th{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:6px!important;
           font-weight:normal;overflow:hidden;padding:4px 2px!important;word-break:normal;}
         .tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
         .tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+        
+        .ownCell{
+          line-height: 20px!important;
+   min-height: 20px!important;
+   height: 20px!important;
+   word-break:normal;
+        }
+        
         </style>
 
 
