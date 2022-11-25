@@ -44,7 +44,7 @@ function bringButtonsForward(){
               document.getElementById("ticketDiv").style="display:block"
               document.getElementById("eszkozDiv").style="display:block"
               document.getElementById("buttonDiv").style="display:block"
-
+              document.getElementById("buttonDiv2").style="display:block;margin-top:50px; "
               document.getElementById("belepesDiv").style="display:none"
               document.getElementById("roomIdInput").style="display:none"
 
@@ -235,7 +235,23 @@ var testmessage = "?"
   <div class="input-group mb-3" style="margin-left:100px">
     <div class="custom-file">
       <input class="input-group-text" type="text"  id="eszkozDiv" placeholder="Eszköz választása" disabled style="background-color: #b0ddec; display:none"/> 
+      <div style="margin-top:50px; display:none;" id="buttonDiv2">
 
+        <button id="selectbus" style="margin-left:10px;background-color: blue;color:white" class="btn btn-light" onclick="selectBus()"> 
+    
+            Busz
+        </button>     
+  
+        <button  id="selecttaxi" style="margin-left:10px; background-color: yellow;color:black;" class="btn btn-light" onclick="selectTaxi()"> 
+       
+            Taxi
+        </button>  
+  
+        <button  id="selectmetro" style="margin-left:10px;background-color: red;color:white;"class="btn btn-light"onclick="selectMetro()"> 
+          
+            Metró
+        </button> </div>
+  
     </div>
     <div id="buttonDiv" style="display:none">
       <div class="input-group mb-3" style="margin-left:100px">
@@ -245,28 +261,15 @@ var testmessage = "?"
         </div>
         
         <div class="custom-file">
-          <button  id="selected" style="margin-left:10px;width:200px!important; display:block; background-color: #000000; color:rgb(0, 0, 0)" class="btn btn-light">Nincs</button>
+          
+          <button disabled id="selected" style="margin-left:10px;width:200px!important; display:block; background-color: #000000; color:rgb(0, 0, 0)" class="btn btn-light">Nincs</button>
         </div>
       
       
       </div>
+
+ 
   
-    <div >
-
-      <button id="selectbus" style="margin-left:10px;background-color: blue;" class="btn btn-light" onclick="selectBus()"> 
-  
-          Busz
-      </button>     
-
-      <button  id="selecttaxi" style="margin-left:10px; background-color: yellow;" class="btn btn-light" onclick="selectTaxi()"> 
-     
-          Taxi
-      </button>  
-
-      <button  id="selectmetro" style="margin-left:10px;background-color: red;"class="btn btn-light"onclick="selectMetro()"> 
-        
-          Metró
-      </button> </div>
 
     </div>
       <div  style="margin-left:10px;" class="input-group-prepend">
