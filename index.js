@@ -43,6 +43,13 @@ app.get("/login", (req, res) => {
 app.get("/register", (req, res) => {
     res.render("register");
 });
+app.get("/fakelogin/:username", (req, res) => {
+    const username = req?.params?.username;
+    session = req.session;
+    session.userid = username;
+    console.log(`Fake login as ${username}`);
+    res.redirect("/");
+});
 
 /*
 CREATE TABLE `scotlandyard`.`users` (
