@@ -1,0 +1,1017 @@
+<html>  
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+  
+    <link rel=”stylesheet” href=”https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css” rel=”nofollow” integrity=”sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm” crossorigin=”anonymous”>
+  </head>
+
+ 
+  <script type="text/javascript">
+
+
+
+    var players = []
+ 
+    var myID = -1
+    var socket = undefined;
+    var roundCount = 0
+    var busTickets = -1
+    var metroTickets = -1
+    var taxiTickets = -1
+    var boatTickets = -1
+    var myPosition = -1
+    var amIMrX = false
+    var playersPositions = {}
+    var playerImages = []   
+    var selectedPosStep = -1
+    
+
+
+
+function FrontEndMessageDisappear(){
+  document.getElementById("generalErrorMsgMessage").style="color:white; margin-top:10px;"
+  bringButtonsForward()
+}
+
+function FrontEndMessageDisappearOnly(){
+ 
+}
+
+
+function bringButtonsForward(){
+  document.getElementById("choosen").style="display:block;width:200px!important;"
+              document.getElementById("ticketDiv").style="display:block"
+              document.getElementById("eszkozDiv").style="display:block"
+              document.getElementById("buttonDiv").style="display:block"
+              document.getElementById("buttonDiv2").style="display:block;margin-top:50px; "
+              document.getElementById("belepesDiv").style="display:none"
+              document.getElementById("roomIdInput").style="display:none"
+
+}
+
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+    function onPageLoad() {
+
+        document.getElementById("messageBox").value = "";
+    }
+    function connectWs() {
+      document.getElementById("becomeMrXButton").style=""
+      document.getElementById("myCanvas").style="margin-left: 100px;border-style: solid; display:block; margin-top: 20; margin-bottom:40px;margin-right:50px"
+      document.getElementById("wrapper").style="display:block"
+      document.getElementById("mainDiv").style="width:100%; margin-top:50px;display:block"
+        socket = new WebSocket('ws://localhost:8080/?roomid='+document.getElementById("roomIdInput").value);
+        socket.addEventListener('open', (event) => {console.log("Connected.")});
+        socket.addEventListener('message', (event) => { //You can parse messages and control the game here.
+
+
+          var s = JSON.parse(event.data)
+
+       
+          if(s.type=="STATE_UPDATE"){
+            
+      
+            for (let i=0;i<s.data.length;i++){
+              var ty = 'player' + (i)
+
+            if(!players.includes(s.data[i].id)){
+            players.push([s.data[i].id])}
+
+            if(!players.includes(s.data[i].color)){
+            playerImages.push(s.data[i].color + ".png")}
+              console.log(players)
+              console.log(playerImages)
+              console.log(playersPositions)
+            document.getElementById(ty).src = s.data[i].color + ".png"
+            
+            playersPositions[s.data[i].id] = (s.data[i].position)
+            console.log(playersPositions)
+            
+            if (s.data[i].id == myID ){
+              busTickets = s.data[i].tickets.bus
+              metroTickets = s.data[i].tickets.metro
+              taxiTickets = s.data[i].tickets.taxi
+              boatTickets = s.data[i].tickets.boat
+              //doubleTickets = s.data[i].tickets.double
+            }
+           
+          }
+         
+          drawMap()
+          }
+
+          if(s.type=="OWN_DATA_UPDATE"){
+            myPosition = s.data.position
+            playersPositions[myID] = myPosition
+            busTickets = s.data.tickets.bus
+            metroTickets = s.data.tickets.metro
+            taxiTickets = s.data.tickets.taxi
+            boatTickets = s.data.tickets.boat
+            //doubleTickets = s.data.tickets.double
+            drawMap()
+            
+            
+            delay(1000).then(() => FrontEndMessageDisappear());
+          }
+
+          if(s.type=="GAME_ENDED"){
+            FrontEndMessage("Játék vége!", "alert alert-warning")
+
+          }
+
+
+          if(s.type=="GAME_START") {
+            var video=document.getElementById("myVideo");
+
+            video.muted = !video.muted;
+            if (video.paused == true){
+             
+              video.play()
+            }
+            document.getElementById("ifYouAreMrX").src="bobby.png"
+            delay(1000).then(() => document.getElementById("ifYouAreMrX").style=style="position:absolute;  display:block; right: 850px;  top: 40px;");
+            
+            if (amIMrX==true){
+              document.getElementById("ifYouAreMrX").src="xinv.png"
+              delay(1000).then(() => document.getElementById("ifYouAreMrX").style=style="position:absolute;  display:block; right: 850px;  top: 40px;");
+
+            }
+              FrontEndMessage("Játék indul!" , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
+
+              document.getElementById("becomeMrXButton").style="display:none"
+              delay(1000).then(() =>   document.getElementById("tableDiv").style="margin-left:100px!important;margin-top:60px!important;display:block; width:1512px!important;color: rgb(255, 255, 255)!important;" );
+
+              for(let y=1;y<25;y++){
+                let u = "round" + y
+               
+                document.getElementById(u).textContent ="metro"
+
+    }
+
+            }
+          if(s.type=="NEXT_ROUND"){
+              roundCount +=1
+              FrontEndMessage("Következő kör!" , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
+            }
+
+            if(s.type=="STEP_NOT_ACCEPTED"){
+              FrontEndMessage("Ide nem tudsz lépni!" , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
+
+            }
+            if(s.type=="STEP_ACCEPTED"){
+         
+              FrontEndMessage("Sikeres lépés! Most a többiek jönnek!" , "alert alert-warning");
+              delay(1000).then(() => FrontEndMessageDisappear());
+
+        }
+       
+          if(s.type=="MR_X_LAST_TICKET"){
+
+              addMrXRoute(s.ticket,roundCount)
+              //TODO ADD_MR_X_PLACE
+            }
+              
+          if(s.type=="log"){
+            myid_ = s.msg.split(":")
+            myID = myid_[1].trim()
+            document.getElementById("belepesDiv").style="display:none"
+              document.getElementById("roomIdInput").style="display:none"
+
+          }
+          if(s.type=="YOU_ARE_MR_X"){
+            amIMrX = true
+            
+            
+            FrontEndMessage("Te vagy Mr.X!" , "alert alert-danger");
+              delay(1000).then(() => FrontEndMessageDisappear());
+
+          }
+          
+        });
+        socket.addEventListener('close', (event) => {console.log("Closed."); socket = undefined;});
+    }
+    function sendMsg(msgToSend) {
+        if(socket!==undefined) {
+            socket.send(msgToSend);
+        }
+        else {
+            alert("There is no alive connection.");
+        }
+    }
+    function sendCustom() {
+        let msgToSend = document.getElementById("msgInput").value;
+        sendMsg(msgToSend);
+    }
+    function becomeMrX() {
+        sendMsg(`{"type" : "CLAIM_MR_X"}`);
+        //document.getElementById("becomeMrXButton").style="display:none";
+    }
+    function getOwnData() {
+        socket.send(`{"type": "GET_OWN_DATA"}`);
+    }
+    function stepTo(pos,veh) {
+        socket.send(`{"type": "step", "toPos":${pos}, "byVehicle": "${veh}"}`);
+        getOwnData()
+
+    }
+
+    function addMrXRoute(mode,round){
+      document.getElementById("round" + round).textContent = mode
+    }
+    function addMrPlace(place,round){
+      document.getElementById("round_" + round).textContent = place
+    }
+var testmessage = "?"
+
+</script>
+<body>
+  <video controls loop="true" autoplay="autoplay" controls muted id="myVideo" style="width:0px;position: absolute; left:100%;bottom:0%">
+    <source src="  https://martinmillermusic.com/images/SnapSave.io-Crime-Thriller-background-Music-for-videos--_Unsolved-Murder_-Suspenseful-Film-Noir-Scene-Soundtrack.mp4
+    " type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+
+
+<div class="mainDiv" id="mainDiv" style="width:100%; margin-top:50px;display:none" >
+
+
+
+  <div class="input-group mb-3" style="margin-left:100px">
+    <div class="custom-file">
+
+      <input class="input-group-text" type="text"  id="eszkozDiv" placeholder="Eszköz választása" disabled style="background-color: #b0ddec; display:none"/> 
+      <div style="margin-top:50px; display:none;" id="buttonDiv2">
+
+        <button id="selectbus" style="margin-left:10px;background-color: blue;color:white" class="btn btn-light" onclick="selectBus()"> 
+    
+            Busz
+        </button>     
+  
+        <button  id="selecttaxi" style="margin-left:10px; background-color: yellow;color:black;" class="btn btn-light" onclick="selectTaxi()"> 
+       
+            Taxi
+        </button>  
+  
+        <button  id="selectmetro" style="margin-left:10px;background-color: red;color:white;"class="btn btn-light"onclick="selectMetro()"> 
+          
+            Metró
+
+
+        <button  id="selectBoat" style="margin-left:10px;background-color: rgb(0, 0, 0);color:white;"class="btn btn-light"onclick="selectBoat()"> 
+          
+          Komp
+      </button>
+        </button><div id="generalErrorMsgMessage" style="color:white;margin-top:10px;">Teszt</div></div>
+        
+
+    </div>
+    <div id="buttonDiv" style="display:none">
+      <div class="input-group mb-3" style="margin-left:100px">
+        <div class="custom-file">
+          <input class="input-group-text" type="text"  id="choosen" placeholder="Lépés eszköze:" disabled style="background-color: #ffffff; display:block; width:200px!important;"/> 
+      
+        </div>
+        
+        <div class="custom-file">
+          
+          <button disabled id="selected" style="margin-left:10px;width:200px!important; display:block; background-color: #000000; color:rgb(0, 0, 0)" class="btn btn-light">Nincs</button>
+        </div>
+      
+      
+      </div>
+
+ 
+  
+
+    </div>
+      <div  style="margin-left:10px;" class="input-group-prepend">
+      <button class="btn btn-danger" id="becomeMrXButton" style="display:none" onclick="becomeMrX()">Szeretnék Mr. X lenni!</button>
+      <div id="ticketDiv" style="display:none">
+     
+      <div id="busTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0); margin-left:300px; background-color: blue!important">Buszjegyek: </div>
+      <div id="metroTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0);margin-left:300px;  background-color: red!important">Metrójegyek: </div>
+      <div id="taxiTickets" class="input-group-text tickett" style="color: rgb(0, 0, 0);margin-left:300px;   color:black!important; background-color: yellow!important">Taxijegyek: </div>
+      <div id="boatTickets" class="input-group-text tickett" style="color: rgb(255, 255, 255);margin-left:300px;   color:rgb(255, 255, 255)!important; background-color: rgb(0, 0, 0)!important">Kompjegyek: </div>
+
+      </div>
+      </div>
+    </div>
+   
+  </div>
+
+
+  <img src="x.png" id="ifYouAreMrX" style="position:absolute;  display:none; right: 700px;  top: 40px;"width="67">
+  <img src="finallogooo.png" style="position:absolute;   right: 0px;  top: -10px;"width="478">
+
+  <div style="position:relative;left: 42%; top:45%; width:50%;">
+    <div>
+      <input class="input-group-text"  style="height: 120px" type="text"  id="roomIdInput" placeholder="Szoba azonositó" /> <button id="belepesDiv"  class="btn btn-primary"  onclick="connectWs()">Belépés</button>
+
+    </div>
+
+  <div style="text-align: center; font-family: Raleway, sans-serif; font-size: xx-large; color:white"> 
+
+   
+  </div>
+
+<textarea id="messageBox" rows="20" cols="50" disabled style="display:none"></textarea>
+
+
+
+</div>
+
+
+
+
+
+ <div class="wrapper" id="wrapper" style="margin-bottom:50px;display:none">
+
+        <div style="width:1250; height:729px " ><canvas style="margin-left: 100px;border-style: solid; display:none; margin-top: 20; margin-bottom:40px;margin-right:50px" id="myCanvas" width="1250px" height="729px">
+        </canvas></div>
+
+        
+<table class="table table-striped table-dark" style="margin-left:100px!important;margin-top:60px!important;margin-bottom:100px; display:none;margin-bottom:100px!important; width:1512px!important;color: rgb(255, 255, 255)!important;" id="tableDiv">
+  <thead>
+
+    <tr>
+ 
+    
+     
+
+    </tr>
+
+   
+  </thead>
+  <tbody>
+      <tr>
+        <th class="tg-7btt">Kör</th>
+          <th class="tg-c3ow">1</th>
+          <td class="tg-c3ow">2</td>
+          <td class="tg-7btt">3</td>
+          <td class="tg-c3ow">4</td>
+           <td class="tg-c3ow">5</td>
+ 
+          <td class="tg-c3ow">6</td>
+          <td class="tg-c3ow">7</td>
+
+      <td class="tg-7btt">8</td>
+    
+      <td class="tg-c3ow">9</td>
+   
+      <td class="tg-c3ow">10</td>
+   
+      <td class="tg-c3ow">11</td>
+   
+      <td class="tg-c3ow">12</td>
+   
+      <td class="tg-7btt">13</td>
+    
+      <td class="tg-c3ow">14</td>
+    
+      <td class="tg-c3ow">15</td>
+   
+      <td class="tg-c3ow">16</td>
+    
+      <td class="tg-c3ow">17</td>
+   
+      <td class="tg-7btt">18</td>
+   
+      <td class="tg-c3ow">19</td>
+    
+      <td class="tg-c3ow">20</td>
+   
+      <td class="tg-c3ow">21</td>
+   
+      <td class="tg-c3ow">22</td>
+    
+      <td class="tg-c3ow">23</td>
+   
+      <td class="tg-7btt">24</td>
+    
+    </tr>
+    <tr>
+      <th class="tg-7btt">Mód</th>
+      <td class="tg-c3ow" id="round1"></td>
+
+      <td class="tg-c3ow" id="round2"></td>
+
+
+      <td class="tg-7btt" id="round3"></td>
+
+
+      <td class="tg-c3ow" id="round4"></td>
+
+
+
+      <td class="tg-c3ow" id="round5"></td>
+
+
+      <td class="tg-c3ow" id="round6"></td>
+
+
+      <td class="tg-c3ow" id="round7"></td>
+
+
+      <td class="tg-7btt" id="round8"></td>
+
+      <td class="tg-c3ow" id="round9"></td>
+
+      <td class="tg-c3ow" id="round10"></td>
+
+
+
+
+      <td class="tg-c3ow" id="round11"></td>
+
+      <td class="tg-c3ow" id="round12"></td>
+
+      <td class="tg-7btt" id="round13"></td>
+
+
+
+      <td class="tg-c3ow" id="round14"></td>
+
+
+      <td class="tg-c3ow" id="round15"></td>
+
+
+
+      <td class="tg-c3ow" id="round16"></td>
+
+
+
+      <td class="tg-c3ow" id="round17"></td>
+
+
+
+      <td class="tg-7btt" id="round18"></td>
+
+
+      <td class="tg-c3ow" id="round19"></td>
+
+
+
+      <td class="tg-c3ow" id="round20"></td>
+
+
+      <td class="tg-c3ow"id="round21"></td>
+
+
+      <td class="tg-c3ow" id="round22"></td>
+
+
+      <td class="tg-c3ow" id="round23"></td>
+
+      <td class="tg-7btt" id="round24"></td>
+    </tr>
+
+    <tr>
+      
+      <td class="tg-7btt">Hely</td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_3"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_8"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_13"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_18"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="tg-7btt ownCell" id="round_24"></td>
+
+    </tr>
+  </tbody>
+  </table>
+    
+  </div>
+</div>
+
+
+
+<style>
+
+body{
+  background-image: url(https://wallpaperaccess.com/full/103560.jpg);
+  overflow-x:hidden;
+}
+      /* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+</style>
+
+
+
+    <style type="text/css">
+        .table  {border-collapse:collapse;border-spacing:10px; color:rgb(255, 255, 255);line-height: 10px!important;
+   min-height: 10px!important;
+   height: 10px!important;}
+        .tg td{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:6px!important; color:white;
+          overflow:hidden;padding:3px 3px!important;word-break:normal;}
+        .tg th{border-color:rgb(255, 255, 255);border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:6px!important;
+          font-weight:normal;overflow:hidden;padding:4px 2px!important;word-break:normal;}
+        .tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
+        .tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+        
+        .ownCell{
+          line-height: 20px!important;
+   min-height: 20px!important;
+   height: 20px!important;
+   word-break:normal;
+        }
+        
+        </style>
+
+
+    <img id="img1" style="display: none;" onclick="window.open(this.src)">
+    <img id="img2"style="display: none;">
+    <img id="img3"style="display: none;">
+    <img id="img4"style="display: none;">
+    <img id="img5"style="display: none;">
+    <img id="img6"style="display: none;">
+    <img id="img7"style="display: none;">
+    <img id="img8"style="display: none;">
+    <img id="img9"style="display: none;">
+    <img id="img10"style="display: none;">
+
+    <img id="player0" style="display: none;">
+    <img id="player1" style="display: none;">
+    <img id="player2" style="display: none;">
+    <img id="player3" style="display: none;">
+    <img id="player4" style="display: none;">
+    <img id="player5" style="display: none;">
+    <img id="player6" style="display: none;">
+    <img id="player7" style="display: none;">
+    <img id="player8" style="display: none;">
+    
+
+
+    <style>
+        .wrapper {
+      display: flex;
+    }
+    
+    .wrapper > div {
+      flex: 1;
+    }
+
+
+    .tickett {
+      color:white!important;
+      background-color: rgb(27, 27, 27)!important;
+      font-family:'Courier New', Courier, monospace
+    }
+        </style>
+<script>
+
+var Acanvas = document.createElement('canvas');
+var playerCtx = Acanvas.getContext('2d');
+
+function selectBus(){
+
+    selectedMode = "bus"
+    document.getElementById("selected").textContent="Busz"
+    document.getElementById("selected").style="display:block; width:200px!important;background-color: blue;margin-left:10px; color:white"
+    document.getElementById("generalErrorMsgMessage").textContent = "Busz kiválasztva!"
+
+}
+function selectTaxi(){
+    selectedMode = "taxi"
+    document.getElementById("selected").textContent="Taxi"
+    document.getElementById("selected").style="display:block;width:200px!important;background-color: yellow;margin-left:10px;"
+    document.getElementById("generalErrorMsgMessage").textContent = "Taxi kiválasztva!"
+
+}
+function selectMetro(){
+   selectedMode = "metro"
+   document.getElementById("selected").textContent="Metró"
+   document.getElementById("selected").style="display:block;width:200px!important;background-color: red;margin-left:10px; color:white"
+   document.getElementById("generalErrorMsgMessage").textContent = "Metró kiválasztva!"
+
+}
+function selectBoat(){
+   selectedMode = "boat"
+   document.getElementById("selected").textContent="Komp"
+   document.getElementById("selected").style="display:block;width:200px!important;background-color: black;margin-left:10px; color:white"
+   document.getElementById("generalErrorMsgMessage").textContent = "Komp kiválasztva!"
+
+}
+var selectedMode = "none"
+
+
+
+
+
+var player = 0
+const marginOffset= 100
+
+const taxiMatrix = [
+[false, true, true, false, false, true, false, true, false, true],
+[true, true, true, false, false, true, false, true, false, true],
+[false, true, false, false, false, true, false, true, false, true],
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[true, true, true, false, false, false, false, true, false, true],
+[false, false, false, false, false, false, false, false, false, false],
+[true, true, true, false, false, true, false, false, false, true],
+[false, false, false, false, false, false, false, false, false, false],
+[true, true, true, false, false, true, false, true, false, false]
+]
+
+
+const metroMatrix = [
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, true, false, true, false, true, true, false, false],
+[false, true, false, false, true, false, true, true, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, true, true, false, false, false, true, true, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, true, true, false, true, false, false, true, false, false],
+[false, false, false, false, false, false, false, false, false, false],
+[false, false, false, false, false, false, false, false, false, false]
+]
+
+
+const busMatrix = [
+[false, false, true, true, false, true, true, true, true, false],
+[false, false, false, false, false, false, false, false, false, false],
+[true, false, false, true, false, true, true, true, true, false],
+[true, false, true, false, false, true, true, true, true, false],
+[false, true, true, false, false, false, true, true, false, false],
+[true, false, true, true, false, false, true, true, true, false],
+[true, false, true, true, false, false, false, true, true, false],
+[true, false, true, true, false, false, true, false, true, false],
+[true, false, true, true, false, false, true, true, false, false],  
+[false, false, false, false, false, false, false, false, false, false]
+]
+
+
+const graphPoints = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+
+
+var graphPointPositions = [
+[406,142], //Batthyany
+[703,267], //Szabadsag
+[469,428], //Lanchid
+[782,401], //Gozsdu
+[600,733], //Rudas
+[1004,196], //Oktogon
+[1096,317], //Instant
+[1163,492], //Blaha
+[1180,631], //Rákóczi
+[959,747], //Kálvin
+[1151,870], //Corvin
+[1472,383], //Keleti
+[1665,391], //Arena
+[1439,51], //Paprika
+[1244,182] //Allatorvos
+]
+
+for (let i=0; i<graphPointPositions.length; i++){
+    graphPointPositions[i][0] = (Math.round(graphPointPositions[i][0]-255)*0.76734192756)
+    graphPointPositions[i][1] = Math.round(graphPointPositions[i][1]*0.76734192756)
+}
+
+var graphPointLengths = []
+
+
+const graphImages = [
+"blaha.png", //*
+"szabadsag.png", //*
+"oktogon.png", //*
+"rudas.png", //*
+"nyugati.png", //*
+"deak.png", //*
+"corvin.png", //*
+"pillango.png",
+"nagyvarad.png",
+"arena.png",
+"fiume.png",
+"instant.png",
+"hb.png",
+"batthyany.png",
+"kalvin.png",
+"rakoczi.png"
+]   
+
+
+
+var canvas = document.getElementById("myCanvas");
+    var tmpCtx = canvas.getContext("2d");
+
+const radius = 30
+
+var background = new Image();
+background.src = "4miniature4.png";
+background.id="background"
+background.style="display:none"
+document.body.appendChild(background);
+
+background.onload = function(){
+  tmpCtx.drawImage(background,0,0);   
+
+};
+
+
+function drawLines(radius){
+var taxiPlaces = []
+var metroPlaces = []
+var busPlaces = []
+for (let i=0; i<10;i++){
+    for (let j=0; j<10;j++){
+        if(taxiMatrix[i][j] == true){
+            tmpCtx.strokeStyle = "yellow";
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(graphPointPositions[i][0], graphPointPositions[i][1]);
+            
+            tmpCtx.lineTo(graphPointPositions[j][0], graphPointPositions[j][1]);
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+            tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+3, 0, Math.PI * 2, true);
+            //tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+3, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+          
+            if (!taxiPlaces.includes(i)) {
+                taxiPlaces.push(i);
+            }
+            if (!taxiPlaces.includes(j)) {
+                taxiPlaces.push(j);
+            }
+
+        }        
+}
+}
+
+
+for (let i=0; i<10;i++){
+    for (let j=0; j<10;j++){
+        if(metroMatrix[i][j] == true){
+            tmpCtx.strokeStyle = "red";
+            var offset = 3
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(graphPointPositions[i][0], graphPointPositions[i][1]);
+            
+            tmpCtx.lineTo(graphPointPositions[j][0], graphPointPositions[j][1]);
+            
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+            if (taxiPlaces.includes(i)){
+                offset += 3
+            }
+            tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+            //tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+
+            if (!metroPlaces.includes(i)) {
+                metroPlaces.push(i);
+            }
+            if (!metroPlaces.includes(j)) {
+                metroPlaces.push(j);
+            }
+        }        
+}
+}
+
+
+for (let i=0; i<10;i++){
+    for (let j=0; j<10;j++){
+        if(busMatrix[i][j] == true){
+            tmpCtx.strokeStyle = "blue";
+            tmpCtx.beginPath()
+            tmpCtx.moveTo(graphPointPositions[i][0], graphPointPositions[i][1]);
+            
+            tmpCtx.lineTo(graphPointPositions[j][0], graphPointPositions[j][1]);
+            tmpCtx.closePath()
+            tmpCtx.beginPath()
+
+
+
+            var offset = 3 
+            if (taxiPlaces.includes(j)){
+                offset += 3
+            }
+            if (metroPlaces.includes(j)){
+                offset += 3
+            }
+            tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+
+//          tmpCtx.arc(graphPointPositions[j][0],graphPointPositions[j][1], radius+offset, 0, Math.PI * 2, true);
+            tmpCtx.stroke();
+            tmpCtx.closePath()
+
+            if (!busPlaces.includes(i)) {
+                busPlaces.push(i);
+            }
+            if (!busPlaces.includes(j)) {
+                busPlaces.push(j);
+            }
+        }    
+        }        
+}
+}
+
+
+function drawPoint(arr,radius,position,sorszam, hovalep){
+
+  if(hovalep == -1) {
+    hovalep = position
+  }
+  var t = 'player' + (sorszam)
+  var index= position
+  var thumbImg = document.getElementById(t)
+  thumbImg.src = playerImages[sorszam]
+  if(amIMrX==false){
+   
+
+    if(thumbImg.src.includes("white")){
+
+    }
+    else{
+      thumbImg.onload = function() {
+     tmpCtx.save();
+
+        
+      tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
+
+
+      
+
+};
+    }
+  }
+  else{
+  
+      thumbImg.onload = function() {
+        tmpCtx.save();
+
+        tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
+
+
+ 
+};
+    
+  }
+
+}  
+
+
+canvas.addEventListener('click', function(event) {var ind = -1
+
+var x;
+var y;
+if (event.pageX || event.pageY) { 
+  x = event.pageX;
+  y = event.pageY;
+}
+else { 
+  x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+  y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+} 
+x -= canvas.offsetLeft;
+y -= canvas.offsetTop;
+
+for(let i=0;i<graphPointPositions.length;i++){
+
+    if(x<graphPointPositions[i][0]+radius &&x>graphPointPositions[i][0]-radius){
+    
+        if(y<graphPointPositions[i][1]+radius &&y>graphPointPositions[i][1]-radius){
+           
+            ind = i
+    }
+    else{
+        ind = -1
+    }
+}
+
+} 
+selectedPosStep = ind
+stepTo(ind,selectedMode) //pos,veh
+
+}, false);
+
+
+function drawMap(){
+if(!amIMrX){
+  document.getElementById("selectBoat").style="display:none"
+  document.getElementById("boatTickets").style="display:none"
+}
+
+//drawLines(radius);
+tmpCtx.drawImage(background,0,0);   
+for (let i=0; i<players.length;i++){
+    drawPoint(graphPointPositions,30,playersPositions[i],i,selectedPosStep)
+}
+
+if(busTickets==0){
+  document.getElementById("selectbus").disabled = true
+
+  document.getElementById("busTickets").style="color: rgb(0, 0, 0);margin-left:300px; background-color: #10106b!important"
+  document.getElementById("busTickets").disabled=true
+}
+
+if(metroTickets==0){
+  document.getElementById("selectmetro").disabled = true
+  document.getElementById("metroTickets").style="color: rgb(0, 0, 0);margin-left:300px;  background-color: #752822!important"
+  document.getElementById("metroTickets").disabled=true
+
+}
+
+if(taxiTickets==0){
+  document.getElementById("selecttaxi").disabled = true
+  document.getElementById("taxiTickets").style="color: rgb(0, 0, 0);margin-left:300px;  background-color: #b3a815!important"
+  document.getElementById("taxiTickets").disabled=true
+  
+}
+if(boatTickets==0){
+  document.getElementById("selectBoat").disabled = true
+  document.getElementById("boatTickets").style="color: black;margin-left:300px;  background-color: grey!important"
+  document.getElementById("boatTickets").disabled=true
+  
+}
+document.getElementById("busTickets").textContent = "Buszjegyek: " + busTickets
+document.getElementById("metroTickets").textContent = "Metrójegyek: " + metroTickets
+document.getElementById("taxiTickets").textContent = "Taxijegyek: " + taxiTickets
+document.getElementById("boatTickets").textContent = "Kompjegyek: " + boatTickets
+
+}
+
+</script>
+
+</div>
+<script src=”https://code.jquery.com/jquery-3.2.1.slim.min.js” integrity=”sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN” crossorigin=”anonymous”></script>
+
+</body>
+<script>
+
+
+// When the user clicks on the button, open the modal
+function FrontEndMessage(text,type){
+  document.getElementById("generalErrorMsgMessage").textContent = text
+  document.getElementById("generalErrorMsgMessage").style="color:white;margin-top:10px;"
+//  modal.style = "display: block"
+}
+
+
+
+
+
+
+</script>
+</html>

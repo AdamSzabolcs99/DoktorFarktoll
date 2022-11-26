@@ -1,8 +1,133 @@
 var uuid = require('uuid-random');
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const sessions = require("express-session");
+const MySQLStore = require("express-mysql-session")(sessions);
 const WebSocket = require('ws');
 const url = require('url');
+const cors = require('cors');
+const bcrypt = require('bcrypt');
+const {taxiRoutes, busRoutes, metroRoutes, boatRoutes, graphPoints} = require("./vehicleRoutes.js");
+const connection = require("./dbConnection.js");
+const { password } = require('./conData.js');
+const app = (module.exports = express());
+app.engine(".html", require("ejs").__express);
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static("public"));
+app.set("view engine", "html");
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(cors());
+const saltRounds = 10;
+var sessionStore = new MySQLStore({}, connection);
+const oneWeek = 1000 * 60 * 60 * 24 * 7;
+var session;
+
+
+app.use(
+    sessions({
+      secret: "szoftverarchitekturak_verysecure",
+      saveUninitialized: true,
+      cookie: { maxAge: oneWeek },
+      store: sessionStore,
+      resave: false,
+    })
+);
+
+app.get("/login", (req, res) => {
+    res.render("login");
+});
+app.get("/register", (req, res) => {
+    res.render("register");
+});
+
+/*
+CREATE TABLE `scotlandyard`.`users` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(45) NOT NULL,
+  `password` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE,
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
+*/
+
+app.post("/login", (req, res) => {
+    session = req.session;
+    const username = req?.body?.username;
+    const pass = req?.body?.password;
+    const query = "SELECT * FROM users WHERE username=?;";
+    const values = [username];
+    connection.query(query, values, (err, results) => {
+        JSON_results=JSON.parse(JSON.stringify(results));
+        if(JSON_results.length===1) {
+            const pwHash = JSON_results[0].password;
+            bcrypt.compare(pass, pwHash, function(err, result) {
+                if(result) {
+                    session.userid = username;
+                    res.send(`{"type":"SUCCESSFUL_LOGIN"}`);
+                }
+                else {
+                    res.send("Invalid credentials.");
+                }
+            });
+        }
+        else {
+            res.send("Invalid credentials.");
+        }
+    });
+});
+
+app.post("/register", (req, res) => {
+    session = req.session;
+    const username = req?.body?.username;
+    const pass = req?.body?.password;
+    const query = "SELECT * FROM users WHERE username=?;";
+    const values = [username];
+    connection.query(query, values, (err, results) => {
+        JSON_results=JSON.parse(JSON.stringify(results));
+        if(JSON_results.length===0) {
+            bcrypt.hash(pass, saltRounds, function(err, hash) {
+                const query = "INSERT INTO users (username, password) VALUES (?,?);";
+                const values = [username,hash];
+                connection.query(query, values, (err, results)=> {
+                    res.send(JSON.stringify(results));
+                });
+            });
+        }
+        else {
+            res.send("Already existing user.");
+        }
+    });
+});
+
+
+
+app.use((req, res, next) => {
+    session = req.session;
+    if (session.userid) {
+      next();
+    } else {
+      res.redirect("/login");
+    }
+});
+
+//Pages for logged in users
+app.get("/logout", (req, res) => {
+    req.session.destroy();
+    res.redirect("/login");
+});
+
+
+app.get("/", (req, res) => {
+    res.render("index");
+});
+
 //=====WEBSOCKET FUNCTIONS======
-const serv_port = 8080;
+const serv_port = 8080; //Websocket port
+const site_port = 80; //Website port
 const wss = new WebSocket.WebSocketServer({port:serv_port}, ()=> {
     console.log('Server started')
 })
@@ -14,7 +139,6 @@ gameRoomVariables = {}
 
 //<!-- MAP DATA, this should be independent from game room as these are constants
 //The adjacency matrixes are not in use at the moment
-const graphPoints = [0,1,2,3];
 //const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
 const taxiMatrix = [
     [true, true, true, true],
@@ -34,6 +158,7 @@ const busMatrix = [ //sor:honnan oszlop:hova
     [true, true, true, true],
     [true, true, true, true],
   ];
+
 //-->
 
 /* Msg to claim Mr. X role: {"type" : "CLAIM_MR_X"} */
@@ -225,16 +350,20 @@ function resetStepCount(roomID) {
 function isAllowedStep(fromPos, toPos, byVehicle) {
     switch(byVehicle) {
         case 'bus':
-            return busMatrix[fromPos][toPos];
+            //return busMatrix[fromPos][toPos];
+            return busRoutes[fromPos].includes(toPos);
             break;
         case 'taxi':
-            return taxiMatrix[fromPos][toPos];
+            //return taxiMatrix[fromPos][toPos];
+            return taxiRoutes[fromPos].includes(toPos);
             break;
         case 'metro':
-            return metroMatrix[fromPos][toPos];
+            //return metroMatrix[fromPos][toPos];
+            return metroRoutes[fromPos].includes(toPos);
             break;
         case 'boat':
-            return boatMatrix[fromPos][toPos];
+            //return boatMatrix[fromPos][toPos];
+            return boatRoutes[fromPos].includes(toPos);
             break;
         default:
             console.log("Unknown type:" + byVehicle);
@@ -242,7 +371,6 @@ function isAllowedStep(fromPos, toPos, byVehicle) {
     }
     //return true;
 }
-
 /*
 stepMessage : {"type": "step", "toPos":3, "byVehicle": "taxi"}
 */
@@ -299,7 +427,7 @@ wss.on('connection', function connection(client, req) {
     try {
         const queryObject = url.parse(req.url, true).query;
         if(queryObject['roomid']===undefined) {
-            throw 'Missing room id';
+            throw 'Missing room ID';
         }
         roomId = queryObject['roomid'];
     }
@@ -352,7 +480,8 @@ wss.on('connection', function connection(client, req) {
     })
 });
 
+
 wss.on('listening', () => {
     console.log(`listening on ${serv_port}`);
 });
-
+app.listen(site_port); //Webpage listening on port
