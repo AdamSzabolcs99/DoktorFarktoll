@@ -90,7 +90,17 @@ function isMrX(id) {
     return;
 }
 
+function getMrXId(playerData) {
+    for (k in Object.keys(playerData)) {
+        if(playerData[k].role==="X") {
+            return k;
+        } 
+    }
+    return undefined;
+}
+
 function mrXStepped(playerData) {
+    //return playerData[getMrXId(playerData)].stepped === 1;
     for(k in Object.keys(playerData)) {
         if(playerData[k].role==="X") {
             return playerData[k].stepped===1;
@@ -185,7 +195,7 @@ function onMessage(client, data) {
         if(!currentRoomData.MrXClaimed) {
             let player = currentRoomData.playerData[id];
             player.role = "X";
-            player.tickets = {"taxi": 3, "bus": 3, "metro": 2, "joker": 2, "double": 2},
+            player.tickets = {"taxi": 3, "bus": 3, "metro": 2, "boat": 2, "double": 2},
             player.color = 'white';
             client.send(`{"type": "YOU_ARE_MR_X"}`);
             notifyEveryone(`{"type": "GAME_START"}`);
@@ -223,6 +233,9 @@ function isAllowedStep(fromPos, toPos, byVehicle) {
         case 'metro':
             return metroMatrix[fromPos][toPos];
             break;
+        case 'boat':
+            return boatMatrix[fromPos][toPos];
+            break;
         default:
             console.log("Unknown type:" + byVehicle);
             return false;
@@ -246,6 +259,10 @@ function playerStepped(client, msg, playerData, roomId) {
         player.tickets[msg.byVehicle] = player.tickets[msg.byVehicle] - 1;
         if(player.role==="X") {
             gameRoomVariables[roomId].lastMrXTicket = msg.byVehicle;
+        }
+        else {
+            const MrXId = getMrXId(playerData);
+            gameRoomVariables[roomId].playerData[MrXId].tickets[msg.byVehicle] += 1;
         }
         return true;
     }
@@ -319,7 +336,7 @@ wss.on('connection', function connection(client, req) {
         "role" : "bobby",
         "position" : getRandomEmptyPos(roomId),
         "stepped" : 0,
-        tickets : {"taxi": 9, "bus": 9, "metro": 6},
+        tickets : {"taxi": 9, "bus": 9, "metro": 6, "boat": 0, "double": 0},
     }
     currentRoomData.allPlayers = currentRoomData.allPlayers+1;
     console.log(`Client ${client.id} connected!`)
