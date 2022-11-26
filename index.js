@@ -100,7 +100,12 @@ app.post("/register", (req, res) => {
                 const query = "INSERT INTO users (username, password) VALUES (?,?);";
                 const values = [username,hash];
                 connection.query(query, values, (err, results)=> {
-                    res.send(JSON.stringify(results));
+                    if(JSON.parse(JSON.stringify(results)).insertId>=0){
+                        res.send(`{"type":"SUCCESSFUL_REGISTRATION"}`);
+                    }
+                    else {
+                        res.send(`{"type":"UNSUCCESSFUL_REGISTRATION"}`);
+                    }
                 });
             });
         }
