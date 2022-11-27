@@ -25,7 +25,8 @@ const saltRounds = 10;
 var sessionStore = new MySQLStore({}, connection);
 const oneWeek = 1000 * 60 * 60 * 24 * 7;
 var session;
-
+const serv_port = 8080; //Websocket port
+const site_port = 5000; //Website port
 
 app.use(
     sessions({
@@ -138,8 +139,6 @@ app.get("/", (req, res) => {
 });
 
 //=====WEBSOCKET FUNCTIONS======
-const serv_port = 8080; //Websocket port
-const site_port = 80; //Website port
 const wss = new WebSocket.WebSocketServer({port:serv_port}, ()=> {
     console.log('Server started')
 })
@@ -494,6 +493,7 @@ wss.on('connection', function connection(client, req) {
 
 
 wss.on('listening', () => {
-    console.log(`listening on ${serv_port}`);
+    console.log(`Websocket listening on port ${serv_port}`);
 });
 app.listen(site_port); //Webpage listening on port
+console.log(`Website is available on port ${site_port}`);
