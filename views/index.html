@@ -73,19 +73,19 @@ function delay(time) {
        
           if(s.type=="STATE_UPDATE"){
             
-            
+            console.log(s.data);
       
             for (let i=0;i<s.data.length;i++){
-
-              if(roundCount==3 || roundCount==8  ||roundCount==13  ||roundCount==18  ||roundCount==24 && playerImages[i] == ('white.png')){
-              addMrPlace(s.data[i].position,roundCount)
-            }
+              if(s.data[i]?.role=="X") {
+                console.log(s.data[i].position);
+                addMrPlace(s.data[i].position,roundCount);
+              }
               var ty = 'player' + (i)
             console.log(players)
-            alert(s.data[i].id)
+            console.log(s.data[i].id)
             if(!players.includes(s.data[i].id))
             {
-            players.push([s.data[i].id])
+            players.push(s.data[i].id)
             }
 
             if(!players.includes(s.data[i].color)){
@@ -154,6 +154,7 @@ function delay(time) {
 
             }
           if(s.type=="NEXT_ROUND"){
+              sendMsg(`{"type": "GET_OWN_DATA"}`);
               roundCount +=1
               FrontEndMessage("Következő kör!" , "alert alert-warning");
               delay(1000).then(() => FrontEndMessageDisappear());
@@ -472,7 +473,7 @@ var testmessage = "?"
 
       <td class="tg-7btt" id="round24"></td>
     </tr>
-
+    <td class="tg-7btt ownCell" id="round_0" hidden></td>
     <tr>
       
       <td class="tg-7btt">Hely</td>
@@ -889,7 +890,6 @@ for (let i=0; i<10;i++){
 
 
 function drawPoint(arr,radius,position,sorszam, hovalep){
-  console.log("fasz")
   if(hovalep == -1) {
     hovalep = position
   }
@@ -954,7 +954,7 @@ if(!amIMrX){
 }
 
 //drawLines(radius);
-alert(players.length)
+//alert(players.length)
 tmpCtx.drawImage(background,0,0);   
 for (let i=0; i<players.length;i++){
     drawPoint(graphPointPositions,30,playersPositions[i],i,selectedPosStep)
