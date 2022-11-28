@@ -145,6 +145,7 @@ html,body{
         var json = JSON.parse(xhr.responseText);
     if (json.type=="SUCCESSFUL_REGISTRATION"){
         alert("Sikeres regisztráció!")
+        document.location.href = "/login";
     }
     if (json.type=="UNSUCCESSFUL_REGISTRATION"){
       alert("Sikertelen regisztráció!")

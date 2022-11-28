@@ -151,7 +151,7 @@ gameRoomVariables = {}
 //<!-- MAP DATA, this should be independent from game room as these are constants
 //The adjacency matrixes are not in use at the moment
 //const graphPointPositions = [(0,0), (100,100), (150, 150), (200, 200)]; //pixel data for every graph point, not neccessary to be on the server side
-const taxiMatrix = [
+/* const taxiMatrix = [
     [true, true, true, true],
     [true, true, true, true],
     [true, true, true, true],
@@ -169,7 +169,7 @@ const busMatrix = [ //sor:honnan oszlop:hova
     [true, true, true, true],
     [true, true, true, true],
   ];
-
+ */
 //-->
 
 /* Msg to claim Mr. X role: {"type" : "CLAIM_MR_X"} */
@@ -347,7 +347,7 @@ function onMessage(client, data) {
     }
     else {
         console.log(`Not implemented JSON message : ${msg.toString()}`);
-        client.send(`{"type": "alert", "msg" : "Dude wtf"}`);
+        client.send(`{"type": "alert", "msg" : "Dude"}`);
     }
 }
 

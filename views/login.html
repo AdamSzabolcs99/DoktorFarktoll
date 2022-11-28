@@ -28,7 +28,8 @@
       <label for="password"><b>Jelszó</b></label>
       <input class="input-group-text" type="password" placeholder="Jelszó" id="password" required>
   
-      <button onclick="kutya()" class="btn btn-primary">Belépek!</button>
+      <button onclick="login()" class="btn btn-primary">Belépek!</button> <hr>
+      <button onclick="toRegister()" class="btn btn-info">Regisztráció</button>
 
     </div>
 
@@ -124,9 +125,11 @@ html,body{
 </body>
 
 <script>
+function toRegister() {
+  document.location.href = "/register";
+}
 
-
-  function kutya(){
+  function login(){
     var xhr = new XMLHttpRequest();
   var url = "/login"; 
   xhr.open("POST", url, true);
