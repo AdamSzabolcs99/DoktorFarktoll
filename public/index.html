@@ -26,7 +26,7 @@
     var playerImages = []   
     var selectedPosStep = -1
     
-
+    var rounds = 0
 
 
 function FrontEndMessageDisappear(){
@@ -73,8 +73,13 @@ function delay(time) {
        
           if(s.type=="STATE_UPDATE"){
             
+            
       
             for (let i=0;i<s.data.length;i++){
+
+              if(roundCount==3 || roundCount==8  ||roundCount==13  ||roundCount==18  ||roundCount==24 && playerImages[i] == ('white.png')){
+              addMrPlace(s.data[i].position,roundCount)
+            }
               var ty = 'player' + (i)
 
             if(!players.includes(s.data[i].id)){
@@ -94,11 +99,11 @@ function delay(time) {
               busTickets = s.data[i].tickets.bus
               metroTickets = s.data[i].tickets.metro
               taxiTickets = s.data[i].tickets.taxi
-              //boatTickets = s.data[i].tickets.boat
+              boatTickets = s.data[i].tickets.boat
             }
            
           }
-         
+          
           drawMap()
           }
 
@@ -108,6 +113,7 @@ function delay(time) {
             busTickets = s.data.tickets.bus
             metroTickets = s.data.tickets.metro
             taxiTickets = s.data.tickets.taxi
+            boatTickets =  s.data.tickets.boat
             drawMap()
             
             
@@ -115,7 +121,7 @@ function delay(time) {
           }
 
           if(s.type=="GAME_ENDED"){
-            FrontEndMessage("Játék vége!", "alert alert-warning")
+            FrontEndMessage(s.msg, "alert alert-warning")
 
           }
 
@@ -143,12 +149,7 @@ function delay(time) {
               document.getElementById("becomeMrXButton").style="display:none"
               delay(1000).then(() =>   document.getElementById("tableDiv").style="margin-left:100px!important;margin-top:60px!important;display:block; width:1512px!important;color: rgb(255, 255, 255)!important;" );
 
-              for(let y=1;y<25;y++){
-                let u = "round" + y
-               
-                document.getElementById(u).textContent ="metro"
-
-    }
+             
 
             }
           if(s.type=="NEXT_ROUND"){
@@ -172,6 +173,7 @@ function delay(time) {
           if(s.type=="MR_X_LAST_TICKET"){
 
               addMrXRoute(s.ticket,roundCount)
+
               //TODO ADD_MR_X_PLACE
             }
               
@@ -223,7 +225,7 @@ function delay(time) {
       document.getElementById("round" + round).textContent = mode
     }
     function addMrPlace(place,round){
-      document.getElementById("round_" + round).textContent = place
+      document.getElementById("round_" + round).textContent = nameMap[place]
     }
 var testmessage = "?"
 
@@ -711,7 +713,7 @@ var graphPointPositions = [
 [600,733], //Rudas
 [1004,196], //Oktogon
 [1096,317], //Instant
-[1163,492], //Blaha
+[1250,436], //Blaha
 [1180,631], //Rákóczi
 [959,747], //Kálvin
 [1151,870], //Corvin
@@ -719,6 +721,25 @@ var graphPointPositions = [
 [1665,391], //Arena
 [1439,51], //Paprika
 [1244,182] //Allatorvos
+]
+
+
+var nameMap = [
+"Batthyány Tér",
+"Szabadság Tér",
+"Lánchid",
+"Gozsdu Udvar",
+"Rudas fürdő",
+"Oktogon",
+"Instant",
+"Erkel Ferenc Szinház",
+"Rákóczi Tér",
+"Kálvin Tér",
+"Corvin Negyed",
+"Keleti Pályaudvar",
+"Aréna Pláza",
+"Paprika Vendéglő",
+"Állatorvosi Egyetem"
 ]
 
 for (let i=0; i<graphPointPositions.length; i++){
@@ -730,22 +751,21 @@ var graphPointLengths = []
 
 
 const graphImages = [
-"blaha.png", //*
-"szabadsag.png", //*
-"oktogon.png", //*
-"rudas.png", //*
-"nyugati.png", //*
-"deak.png", //*
-"corvin.png", //*
-"pillango.png",
-"nagyvarad.png",
-"arena.png",
-"fiume.png",
-"instant.png",
-"hb.png",
-"batthyány.png",
-"kálvin.png",
-"rákóczi.png"
+"Batthyány Tér",
+"Szabadság Tér",
+"Lánchid",
+"Gozsdu Udvar",
+"Rudas fürdő",
+"Oktogon",
+"Instant",
+"Blaha Lujza Tér",
+"Rákóczi Tér",
+"Kálvin Tér",
+"Corvin Negyed",
+"Keleti Pályaudvar",
+"Aréna Pláza",
+"Paprika Vendéglő",
+"Állatorvosi Egyetem"
 ]   
 
 
@@ -756,7 +776,7 @@ var canvas = document.getElementById("myCanvas");
 const radius = 30
 
 var background = new Image();
-background.src = "4miniature4.png";
+background.src = "4miniature45.png";
 background.id="background"
 background.style="display:none"
 document.body.appendChild(background);
@@ -868,34 +888,16 @@ for (let i=0; i<10;i++){
 
 
 function drawPoint(arr,radius,position,sorszam, hovalep){
-
+  console.log("fasz")
   if(hovalep == -1) {
     hovalep = position
   }
   var t = 'player' + (sorszam)
   var index= position
   var thumbImg = document.getElementById(t)
+
   thumbImg.src = playerImages[sorszam]
-  if(amIMrX==false){
-   
 
-    if(thumbImg.src.includes("white")){
-
-    }
-    else{
-      thumbImg.onload = function() {
-     tmpCtx.save();
-
-        
-      tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
-
-
-      
-
-};
-    }
-  }
-  else{
   
       thumbImg.onload = function() {
         tmpCtx.save();
@@ -903,12 +905,8 @@ function drawPoint(arr,radius,position,sorszam, hovalep){
         tmpCtx.drawImage(thumbImg, arr[index][0]-radius,arr[index][1]-radius, radius*2, radius*2);
 
 
- 
-};
-    
-  }
-
 }  
+}
 
 
 canvas.addEventListener('click', function(event) {var ind = -1
@@ -925,21 +923,23 @@ else {
 } 
 x -= canvas.offsetLeft;
 y -= canvas.offsetTop;
-
+radius_ = radius +20
 for(let i=0;i<graphPointPositions.length;i++){
 
-    if(x<graphPointPositions[i][0]+radius &&x>graphPointPositions[i][0]-radius){
-    
-        if(y<graphPointPositions[i][1]+radius &&y>graphPointPositions[i][1]-radius){
-           
+    if(x<graphPointPositions[i][0]+radius_ &&x>graphPointPositions[i][0]-radius_){
+        if(y<graphPointPositions[i][1]+radius_ &&y>graphPointPositions[i][1]-radius_){
+
             ind = i
-    }
+      }
+ 
     else{
-        ind = -1
+        
     }
+
 }
 
 } 
+
 selectedPosStep = ind
 stepTo(ind,selectedMode) //pos,veh
 
@@ -958,12 +958,26 @@ for (let i=0; i<players.length;i++){
     drawPoint(graphPointPositions,30,playersPositions[i],i,selectedPosStep)
 }
 
+
+
+
 if(busTickets==0){
   document.getElementById("selectbus").disabled = true
-
   document.getElementById("busTickets").style="color: rgb(0, 0, 0);margin-left:300px; background-color: #10106b!important"
   document.getElementById("busTickets").disabled=true
 }
+
+else{
+  document.getElementById("selectbus").disabled = false
+  document.getElementById("busTickets").style="color: rgb(0, 0, 0);margin-left:300px; background-color: blue!important"
+  document.getElementById("busTickets").disabled=false
+}
+
+
+
+
+
+
 
 if(metroTickets==0){
   document.getElementById("selectmetro").disabled = true
@@ -971,6 +985,18 @@ if(metroTickets==0){
   document.getElementById("metroTickets").disabled=true
 
 }
+else{
+  document.getElementById("selectmetro").disabled = false
+  document.getElementById("metroTickets").style="color: white;margin-left:300px;  background-color: red!important"
+  document.getElementById("metroTickets").disabled=false
+}
+
+
+
+
+
+
+
 
 if(taxiTickets==0){
   document.getElementById("selecttaxi").disabled = true
@@ -978,16 +1004,40 @@ if(taxiTickets==0){
   document.getElementById("taxiTickets").disabled=true
   
 }
+
+
+
+
+
+else{
+  document.getElementById("selecttaxi").disabled = false
+  document.getElementById("taxiTickets").style="color:black!important ;margin-left:300px;  background-color: yellow!important"
+  document.getElementById("taxiTickets").disabled=false
+}
+
+
+
+
+
+
 if(boatTickets==0){
   document.getElementById("selectBoat").disabled = true
   document.getElementById("boatTickets").style="color: black;margin-left:300px;  background-color: grey!important"
   document.getElementById("boatTickets").disabled=true
   
 }
+else{
+  document.getElementById("selectBoat").disabled = false
+  document.getElementById("boatTickets").style="color: white;margin-left:300px;  background-color: black!important"
+  document.getElementById("boatTickets").disabled=false
+  
+}
+
 document.getElementById("busTickets").textContent = "Buszjegyek: " + busTickets
 document.getElementById("metroTickets").textContent = "Metrójegyek: " + metroTickets
 document.getElementById("taxiTickets").textContent = "Taxijegyek: " + taxiTickets
 document.getElementById("boatTickets").textContent = "Kompjegyek: " + boatTickets
+
 
 }
 
